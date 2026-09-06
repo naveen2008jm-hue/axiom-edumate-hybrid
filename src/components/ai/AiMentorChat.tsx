@@ -13,9 +13,11 @@ import {
 import ReactMarkdown from 'react-markdown';
 import { ChatMessage, UserProfile } from '../../types';
 import { soundFx } from '../../lib/sound';
+import { DEMO_CHAT_MESSAGES } from '../demo/demoSeedData';
 
 interface AiMentorChatProps {
   profile: UserProfile;
+  demoMode?: boolean;
 }
 
 const PRESET_PROMPTS = [
@@ -25,15 +27,18 @@ const PRESET_PROMPTS = [
   'Review my STAR resume story for a distributed cache project',
 ];
 
-export const AiMentorChat: React.FC<AiMentorChatProps> = ({ profile }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 'msg-0',
-      role: 'model',
-      content: `👋 Hello **${profile.name.split(' ')[0]}**! I am your **Axiom Placement & Technical Mentor**.\n\nI have context on your target companies (${profile.targetCompanies.slice(0, 3).join(', ')}), your solved DSA patterns, and core subjects.\n\nAsk me anything about:\n- **Algorithm Problem-Solving** & time complexity trade-offs\n- **System Design Fundamentals** (Caching, Raft, Load Balancing)\n- **OS / DBMS Interview FAQs** (Indexing, Concurrency, Normalization)\n- **STAR Behavioral Stories** for tech interviews`,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    },
-  ]);
+export const AiMentorChat: React.FC<AiMentorChatProps> = ({ profile, demoMode = false }) => {
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    if (demoMode) return DEMO_CHAT_MESSAGES;
+    return [
+      {
+        id: 'msg-0',
+        role: 'model',
+        content: `👋 Hello **${profile.name.split(' ')[0]}**! I am your **Axiom Placement & Technical Mentor**.\n\nI have context on your target companies (${profile.targetCompanies.slice(0, 3).join(', ')}), your solved DSA patterns, and core subjects.\n\nAsk me anything about:\n- **Algorithm Problem-Solving** & time complexity trade-offs\n- **System Design Fundamentals** (Caching, Raft, Load Balancing)\n- **OS / DBMS Interview FAQs** (Indexing, Concurrency, Normalization)\n- **STAR Behavioral Stories** for tech interviews`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+    ];
+  });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);

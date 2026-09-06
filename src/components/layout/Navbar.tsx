@@ -12,6 +12,7 @@ import {
   Activity,
   Sun,
   Moon,
+  Video,
 } from 'lucide-react';
 import { UserProfile, ThemeMode } from '../../types';
 import { soundFx } from '../../lib/sound';
@@ -29,6 +30,8 @@ interface NavbarProps {
   onExportData: () => void;
   onResetData: () => void;
   onNavigateLanding?: () => void;
+  isDemoActive?: boolean;
+  onStartDemo?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -42,6 +45,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenSupabase,
   onExportData,
   onNavigateLanding,
+  isDemoActive,
+  onStartDemo,
 }) => {
   const [soundEnabled, setSoundEnabled] = React.useState(soundFx.enabled);
 
@@ -117,6 +122,22 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Zap className="w-3.5 h-3.5 fill-indigo-400 text-indigo-400" />
             <span>{xpPoints} XP</span>
           </div>
+
+          {/* Start Demo Tour Button */}
+          {onStartDemo && (
+            <button
+              onClick={onStartDemo}
+              title="Launch Automated 13-Step Demo Tour (Ctrl+Shift+D or #demo)"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold pressable border transition-all ${
+                isDemoActive
+                  ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 shadow-md shadow-rose-500/20 animate-pulse'
+                  : 'bg-gradient-to-r from-indigo-600/30 to-purple-600/30 hover:from-indigo-600/50 hover:to-purple-600/50 border-indigo-500/40 text-white shadow-sm'
+              }`}
+            >
+              <Video className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="hidden sm:inline">{isDemoActive ? 'Tour Active' : 'Start Demo Tour'}</span>
+            </button>
+          )}
 
           {/* Sound Synthesizer Toggle */}
           <button

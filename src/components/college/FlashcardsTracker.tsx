@@ -28,6 +28,7 @@ interface FlashcardsTrackerProps {
   onDeleteDeck: (deckId: string) => void;
   onUpdateCardMastery: (deckId: string, cardId: string, mastery: Flashcard['mastery']) => void;
   onAddCardToDeck: (deckId: string, card: Omit<Flashcard, 'id'>) => void;
+  demoMode?: boolean;
 }
 
 export const FlashcardsTracker: React.FC<FlashcardsTrackerProps> = ({
@@ -36,11 +37,31 @@ export const FlashcardsTracker: React.FC<FlashcardsTrackerProps> = ({
   onDeleteDeck,
   onUpdateCardMastery,
   onAddCardToDeck,
+  demoMode = false,
 }) => {
   const [activeDeck, setActiveDeck] = useState<FlashcardDeck | null>(null);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
+
+  // Auto 3D flip animation in Demo Mode
+  useEffect(() => {
+    if (demoMode && decks.length > 0) {
+      setActiveDeck(decks[0]);
+      setCurrentCardIndex(0);
+      setIsFlipped(false);
+      const timer1 = setTimeout(() => {
+        setIsFlipped(true);
+      }, 1500);
+      const timer2 = setTimeout(() => {
+        setIsFlipped(false);
+      }, 4000);
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+      };
+    }
+  }, [demoMode, decks]);
 
   // Modals
   const [createDeckModalOpen, setCreateDeckModalOpen] = useState(false);

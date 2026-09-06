@@ -32,18 +32,28 @@ interface LandingPageProps {
   onEnterApp: () => void;
   theme: ThemeMode;
   onToggleTheme: () => void;
+  onStartDemo?: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   onEnterApp,
   theme,
   onToggleTheme,
+  onStartDemo,
 }) => {
   const [activePreviewTab, setActivePreviewTab] = useState<'overview' | 'omni' | 'dsa' | 'college'>('overview');
 
   const handleLaunch = () => {
     soundFx.playLevelUp();
     onEnterApp();
+  };
+
+  const handleDemoLaunch = () => {
+    if (onStartDemo) {
+      onStartDemo();
+    } else {
+      handleLaunch();
+    }
   };
 
   return (
@@ -81,6 +91,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           {/* Right Actions */}
           <div className="flex items-center gap-3">
+            {onStartDemo && (
+              <button
+                onClick={handleDemoLaunch}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/40 text-indigo-300 text-xs font-mono font-bold pressable"
+              >
+                <Play className="w-3 h-3 fill-indigo-400" />
+                <span>Demo Tour</span>
+              </button>
+            )}
+
             <button
               onClick={onToggleTheme}
               title="Toggle Theme Mode"
@@ -138,6 +158,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <span>Launch Command Center</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
+
+          {onStartDemo && (
+            <button
+              onClick={handleDemoLaunch}
+              className="w-full sm:w-auto px-7 py-4 rounded-full bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 hover:from-indigo-500/30 hover:to-purple-500/30 text-indigo-200 border border-indigo-500/40 text-sm font-bold pressable flex items-center justify-center gap-2 shadow-lg shadow-indigo-950/40"
+            >
+              <Play className="w-4 h-4 fill-indigo-400 text-indigo-400" />
+              <span>Watch Automated Tour (13 Steps)</span>
+            </button>
+          )}
 
           <a
             href="#pillars"

@@ -56,6 +56,18 @@ export const INITIAL_TIMETABLE_EVENTS: TimetableEvent[] = [
     isLocked: true,
   },
   {
+    id: 'tt-clash-1',
+    title: 'Machine Learning & Neural Nets (Elective)',
+    subjectCode: 'CS510E',
+    dayOfWeek: 2,
+    startTime: '09:45',
+    endTime: '11:15',
+    room: 'AI Center Lab 1',
+    teacher: 'Dr. Priya Sharma',
+    eventType: 'LECTURE',
+    color: '#f43f5e',
+  },
+  {
     id: 'tt-5',
     title: 'DAA Problem Solving Tutorial',
     subjectCode: 'CS501T',
