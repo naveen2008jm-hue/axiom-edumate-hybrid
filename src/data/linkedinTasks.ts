@@ -1,0 +1,58 @@
+import { LinkedInTask } from '../types';
+
+export const LINKEDIN_TASKS: LinkedInTask[] = [
+  {
+    id: 'lnk-1',
+    taskKey: 'weekly_learning_post',
+    taskTitle: 'Post a Weekly Technical Learning or Project Milestone',
+    description: 'Share a 3-paragraph summary of a DSA concept mastered, bug solved, or project feature completed with screenshots or GitHub repo link.',
+    category: 'Content Creation',
+    isCompleted: true,
+    frequency: 'Weekly',
+  },
+  {
+    id: 'lnk-2',
+    taskKey: 'engage_with_5_engineers',
+    taskTitle: 'Engage with 5 SDEs/Recruiters at Target Companies',
+    description: 'Leave thoughtful comments on posts from software engineers working at Google, Microsoft, Amazon, or target startups.',
+    category: 'Networking',
+    isCompleted: true,
+    frequency: 'Weekly',
+  },
+  {
+    id: 'lnk-3',
+    taskKey: 'send_3_custom_connects',
+    taskTitle: 'Send 3 Personalized Connection Requests with Notes',
+    description: 'Connect with alumni or engineering managers with a tailored 200-character note expressing genuine interest in their tech stack.',
+    category: 'Networking',
+    isCompleted: false,
+    frequency: 'Weekly',
+  },
+  {
+    id: 'lnk-4',
+    taskKey: 'update_headline_skills',
+    taskTitle: 'Optimize Profile Headline & Featured Section',
+    description: 'Ensure headline includes: "B.Tech CSE \'27 | SDE Aspirant | React, TypeScript, Java, Distributed Systems" and pin top GitHub projects.',
+    category: 'Profile Optimization',
+    isCompleted: true,
+    frequency: 'Monthly',
+  },
+  {
+    id: 'lnk-5',
+    taskKey: 'ats_resume_check',
+    taskTitle: 'Run ATS Resume Format & Keyword Audit',
+    description: 'Ensure single-column layout, action verbs ("Architected", "Optimized by 40%"), clean dates, and PDF format.',
+    category: 'Profile Optimization',
+    isCompleted: false,
+    frequency: 'Monthly',
+  },
+  {
+    id: 'lnk-6',
+    taskKey: 'mock_interview_peer',
+    taskTitle: 'Schedule 1 Peer Mock Interview on Pramp / Discord',
+    description: 'Do a 45-minute live coding session explaining logic out loud before typing, handling test cases, and discussing Big-O.',
+    category: 'Application Tracking',
+    isCompleted: false,
+    frequency: 'Weekly',
+  },
+];
