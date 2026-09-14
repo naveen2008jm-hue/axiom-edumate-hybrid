@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   GraduationCap,
   Calculator,
@@ -16,6 +16,10 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { CgpaRecord, ExamPlanner, CoreSubject } from '../../types';
+import { useTrack } from '../../context/TrackContext';
+
+import { SyllabusForecaster } from './SyllabusForecaster';
+import { BacklogTracker } from './BacklogTracker';
 
 interface AcademicTrackerProps {
   cgpaRecords: CgpaRecord[];
@@ -42,8 +46,21 @@ export const AcademicTracker: React.FC<AcademicTrackerProps> = ({
   onToggleCoreTopic,
   calculateCGPA,
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'cgpa' | 'exams' | 'core-cs'>('core-cs');
+  const { track, trackMeta } = useTrack();
+  const [activeSubTab, setActiveSubTab] = useState<'cgpa' | 'exams' | 'core-cs' | 'forecaster' | 'backlogs'>('core-cs');
   const [expandedSubjectId, setExpandedSubjectId] = useState<string | null>(coreSubjects[0]?.id || null);
+
+  // Sync expanded subject whenever coreSubjects changes (e.g. track switch)
+  useEffect(() => {
+    if (coreSubjects && coreSubjects.length > 0) {
+      const stillExists = coreSubjects.some((s) => s.id === expandedSubjectId);
+      if (!stillExists) {
+        setExpandedSubjectId(coreSubjects[0].id);
+      }
+    } else {
+      setExpandedSubjectId(null);
+    }
+  }, [coreSubjects, expandedSubjectId]);
 
   // New CGPA form
   const [newSem, setNewSem] = useState(cgpaRecords.length + 1);
@@ -71,10 +88,23 @@ export const AcademicTracker: React.FC<AcademicTrackerProps> = ({
   const handleAddExam = (e: React.FormEvent) => {
     e.preventDefault();
     if (!examSubject || !examDate) return;
+    const defaultCode =
+      track === 'commerce'
+        ? 'COM500'
+        : track === 'medical'
+        ? 'MED500'
+        : track === 'law'
+        ? 'LAW500'
+        : track === 'competitive_exams'
+        ? 'GS500'
+        : track === 'humanities'
+        ? 'HUM500'
+        : 'CS500';
+
     onAddExam({
       semester: 5,
       subjectName: examSubject,
-      subjectCode: examCode || 'CS500',
+      subjectCode: examCode || defaultCode,
       examDate,
       difficulty: examDifficulty,
       status: 'Upcoming',
@@ -104,7 +134,7 @@ export const AcademicTracker: React.FC<AcademicTrackerProps> = ({
                 : 'text-slate-400 hover:text-white hover:bg-slate-800'
             }`}
           >
-            Core CS Subject Mastery
+            {trackMeta.shortLabel} Core Mastery
           </button>
           <button
             onClick={() => setActiveSubTab('exams')}
@@ -115,6 +145,26 @@ export const AcademicTracker: React.FC<AcademicTrackerProps> = ({
             }`}
           >
             Semester Exam Planner
+          </button>
+          <button
+            onClick={() => setActiveSubTab('forecaster')}
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition ${
+              activeSubTab === 'forecaster'
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            Syllabus Forecaster
+          </button>
+          <button
+            onClick={() => setActiveSubTab('backlogs')}
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition ${
+              activeSubTab === 'backlogs'
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            Backlog / Arrears Tracker
           </button>
           <button
             onClick={() => setActiveSubTab('cgpa')}
@@ -135,6 +185,16 @@ export const AcademicTracker: React.FC<AcademicTrackerProps> = ({
           <span className="text-emerald-400 font-bold">{runningCgpa}</span>
         </div>
       </div>
+
+      {/* Forecaster Component */}
+      {activeSubTab === 'forecaster' && (
+        <SyllabusForecaster coreSubjects={coreSubjects} examPlanners={examPlanners} />
+      )}
+
+      {/* Backlog Component */}
+      {activeSubTab === 'backlogs' && (
+        <BacklogTracker />
+      )}
 
       {/* 1. Core CS Subjects View */}
       {activeSubTab === 'core-cs' && (
@@ -206,7 +266,7 @@ export const AcademicTracker: React.FC<AcademicTrackerProps> = ({
                 <div>
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     <BookOpen className="w-5 h-5 text-indigo-400" />
-                    <span>{subject.subjectName} — Deep Dive Checklist</span>
+                    <span>{subject.subjectName} — High-Yield Deep Dive Checklist</span>
                   </h3>
                   {subject.notes && <p className="text-xs text-slate-400 mt-1">{subject.notes}</p>}
                 </div>
@@ -215,7 +275,7 @@ export const AcademicTracker: React.FC<AcademicTrackerProps> = ({
                   {/* Key Topics Checklist */}
                   <div className="space-y-3">
                     <div className="text-xs font-mono font-semibold text-slate-400 uppercase">
-                      Interview High-Yield Topics (+10 XP)
+                      Core High-Yield Concepts (+10 XP)
                     </div>
                     <div className="space-y-2">
                       {subject.keyTopics.map((topic, tIdx) => (
@@ -246,7 +306,7 @@ export const AcademicTracker: React.FC<AcademicTrackerProps> = ({
                   {/* Frequently Asked Questions */}
                   <div className="space-y-3">
                     <div className="text-xs font-mono font-semibold text-slate-400 uppercase">
-                      Standard Product Interview Questions
+                      Frequently Asked Exam & Interview Questions
                     </div>
                     <div className="space-y-2">
                       {subject.frequentlyAskedQuestions?.map((faq, fIdx) => (
@@ -279,7 +339,17 @@ export const AcademicTracker: React.FC<AcademicTrackerProps> = ({
                   <label className="block text-slate-400 font-semibold mb-1">Subject Name</label>
                   <input
                     type="text"
-                    placeholder="e.g. Distributed Operating Systems"
+                    placeholder={`e.g. ${
+                      track === 'commerce'
+                        ? 'Financial Accounting & Ind AS'
+                        : track === 'medical'
+                        ? 'Anatomy & Neuroanatomy'
+                        : track === 'law'
+                        ? 'Constitutional Law of India'
+                        : track === 'competitive_exams'
+                        ? 'Indian Polity & Governance'
+                        : 'Distributed Operating Systems'
+                    }`}
                     value={examSubject}
                     onChange={(e) => setExamSubject(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-indigo-500"
@@ -290,7 +360,17 @@ export const AcademicTracker: React.FC<AcademicTrackerProps> = ({
                   <label className="block text-slate-400 font-semibold mb-1">Subject Code</label>
                   <input
                     type="text"
-                    placeholder="CS504"
+                    placeholder={
+                      track === 'commerce'
+                        ? 'CA401'
+                        : track === 'medical'
+                        ? 'MED301'
+                        : track === 'law'
+                        ? 'LAW501'
+                        : track === 'competitive_exams'
+                        ? 'GS101'
+                        : 'CS504'
+                    }
                     value={examCode}
                     onChange={(e) => setExamCode(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-indigo-500 font-mono"

@@ -13,6 +13,7 @@ import {
   Sun,
   Moon,
   Video,
+  LogOut,
 } from 'lucide-react';
 import { UserProfile, ThemeMode } from '../../types';
 import { soundFx } from '../../lib/sound';
@@ -32,6 +33,7 @@ interface NavbarProps {
   onNavigateLanding?: () => void;
   isDemoActive?: boolean;
   onStartDemo?: () => void;
+  onLogout?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -47,6 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigateLanding,
   isDemoActive,
   onStartDemo,
+  onLogout,
 }) => {
   const [soundEnabled, setSoundEnabled] = React.useState(soundFx.enabled);
 
@@ -208,6 +211,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* User Profile Pill with Double-Bezel Avatar */}
           <button
             onClick={onOpenProfile}
+            title="Open Profile & Discipline Settings"
             className="flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full bg-slate-900/90 hover:bg-slate-800 border border-white/10 hover:border-indigo-500/50 pressable group shadow-sm"
           >
             <div className="w-7 h-7 rounded-full p-0.5 bg-gradient-to-tr from-indigo-500 to-purple-500">
@@ -221,6 +225,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               {profile.name.split(' ')[0]}
             </span>
           </button>
+
+          {/* Quick Sign Out */}
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              title="Sign Out / Switch User"
+              className="p-2 rounded-xl bg-slate-900/80 border border-white/5 text-slate-400 hover:text-rose-400 hover:border-rose-500/30 hover:bg-rose-500/10 pressable hidden sm:flex"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </header>

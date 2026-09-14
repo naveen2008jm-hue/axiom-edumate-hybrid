@@ -20,11 +20,16 @@ import {
   Layers,
   HeartPulse,
   CalendarCheck,
-  Compass as CompassIcon,
   Home,
   Globe,
+  HelpCircle,
+  Network,
+  Video,
+  Users,
+  MessageSquare,
 } from 'lucide-react';
 import { TabType } from '../../types';
+import { useTrack } from '../../context/TrackContext';
 import { soundFx } from '../../lib/sound';
 
 interface SidebarProps {
@@ -32,55 +37,81 @@ interface SidebarProps {
   onTabChange: (tab: TabType) => void;
   omniCoursesCount?: number;
   onNavigateLanding?: () => void;
+  onOpenTrackSelector?: () => void;
 }
 
 interface NavItem {
   id: TabType;
   label: string;
+  dynamicLabelKey?: 'practice' | 'opportunities' | 'portfolio';
   icon: React.ElementType;
   badge?: string;
   isAi?: boolean;
   category: string;
 }
 
-const NAV_ITEMS: NavItem[] = [
+const BASE_NAV_ITEMS: NavItem[] = [
   { id: 'overview', label: 'Command Center', icon: LayoutDashboard, category: 'Core Center' },
   { id: 'my-day', label: 'My Day (AI Agenda)', icon: CalendarCheck, isAi: true, badge: 'Live', category: 'Adaptive College Hub' },
   { id: 'timetable', label: 'College Timetable', icon: Clock, category: 'Adaptive College Hub' },
   { id: 'assignments', label: 'Assignments Kanban', icon: FileCheck, category: 'Adaptive College Hub' },
-  { id: 'flashcards', label: 'Active Recall Cards', icon: Layers, category: 'Adaptive College Hub' },
-  { id: 'wellbeing', label: 'Wellbeing & Workload', icon: HeartPulse, category: 'Adaptive College Hub' },
+  { id: 'group-projects', label: 'Group Projects & Conflicts', icon: FolderGit2, badge: 'Sync', category: 'Adaptive College Hub' },
+  { id: 'flashcards', label: 'Voice Flashcards', icon: Layers, category: 'Adaptive College Hub' },
+  { id: 'wellbeing', label: 'Wellbeing & Sleep Debt', icon: HeartPulse, category: 'Adaptive College Hub' },
+  { id: 'doubt-solver', label: 'Multimodal Doubt Solver', icon: HelpCircle, isAi: true, badge: 'AI', category: 'AI Intelligence' },
+  { id: 'concept-map', label: 'Concept Map Generator', icon: Network, isAi: true, badge: 'Gemini', category: 'AI Intelligence' },
   { id: 'omni-skill', label: 'Omni-Skill Architect', icon: Sparkles, isAi: true, badge: 'Axiom', category: 'AI Intelligence' },
-  { id: 'ai-mentor', label: 'AI Placement Mentor', icon: Bot, isAi: true, category: 'AI Intelligence' },
+  { id: 'ai-mentor', label: 'AI Exam & Career Mentor', icon: Bot, isAi: true, category: 'AI Intelligence' },
   { id: 'ai-planner', label: 'AI Study Planner', icon: Compass, isAi: true, category: 'AI Intelligence' },
-  { id: 'dsa', label: '75+ DSA Patterns', icon: Code2, category: 'Technical Mastery' },
-  { id: 'academics', label: 'Academics & Core CS', icon: GraduationCap, category: 'Technical Mastery' },
-  { id: 'aptitude', label: 'Aptitude & Formulas', icon: Calculator, category: 'Technical Mastery' },
-  { id: 'internships', label: 'Job Applications', icon: Briefcase, category: 'Career & Profile' },
-  { id: 'projects', label: 'STAR Projects', icon: FolderGit2, category: 'Career & Profile' },
-  { id: 'mistakes', label: 'Mistakes Log', icon: AlertOctagon, category: 'Career & Profile' },
-  { id: 'courses', label: 'Certificates Vault', icon: Award, category: 'Career & Profile' },
-  { id: 'linkedin', label: 'LinkedIn Checklist', icon: Linkedin, category: 'Career & Profile' },
-  { id: 'productivity', label: 'Focus & Productivity', icon: Timer, category: 'Productivity' },
+  { id: 'dsa', label: 'Skill Practice Sheets', dynamicLabelKey: 'practice', icon: Code2, category: 'Curriculum & Practice' },
+  { id: 'academics', label: 'Academics & Backlogs', icon: GraduationCap, category: 'Curriculum & Practice' },
+  { id: 'aptitude', label: 'Aptitude & Formulas', icon: Calculator, category: 'Curriculum & Practice' },
+  { id: 'mock-interview', label: 'AI Video Mock Interview', icon: Video, isAi: true, badge: 'New', category: 'Career & Opportunities' },
+  { id: 'alumni', label: 'Alumni Network Finder', icon: Users, category: 'Career & Opportunities' },
+  { id: 'internships', label: 'Opportunities Kanban', dynamicLabelKey: 'opportunities', icon: Briefcase, category: 'Career & Opportunities' },
+  { id: 'projects', label: 'Experience Portfolio', dynamicLabelKey: 'portfolio', icon: FolderGit2, category: 'Career & Opportunities' },
+  { id: 'mistakes', label: 'Mistakes Log', icon: AlertOctagon, category: 'Career & Opportunities' },
+  { id: 'courses', label: 'Certificates Vault', icon: Award, category: 'Career & Opportunities' },
+  { id: 'linkedin', label: 'LinkedIn & Outreach', icon: Linkedin, category: 'Career & Opportunities' },
+  { id: 'productivity', label: 'Focus, Recap & Badges', icon: Timer, category: 'Productivity' },
 ];
 
 const CATEGORY_META: Record<string, { label: string; color: string; badge?: string }> = {
   'Core Center': { label: 'CORE CENTER', color: 'bg-indigo-500' },
-  'Adaptive College Hub': { label: 'COLLEGE & WELLBEING', color: 'bg-cyan-500', badge: '5 Tools' },
+  'Adaptive College Hub': { label: 'COLLEGE & WELLBEING', color: 'bg-cyan-500', badge: '6 Tools' },
   'AI Intelligence': { label: 'AI INTELLIGENCE', color: 'bg-purple-500', badge: 'Gemini' },
-  'Technical Mastery': { label: 'TECHNICAL MASTERY', color: 'bg-emerald-500' },
-  'Career & Profile': { label: 'CAREER & PLACEMENT', color: 'bg-amber-500' },
+  'Curriculum & Practice': { label: 'CURRICULUM & PRACTICE', color: 'bg-emerald-500' },
+  'Career & Opportunities': { label: 'CAREER & OPPORTUNITIES', color: 'bg-amber-500', badge: 'Interviews' },
   'Productivity': { label: 'PRODUCTIVITY', color: 'bg-pink-500' },
 };
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNavigateLanding }) => {
-  const categories = Array.from(new Set(NAV_ITEMS.map((item) => item.category)));
+export const Sidebar: React.FC<SidebarProps> = ({
+  activeTab,
+  onTabChange,
+  onNavigateLanding,
+  onOpenTrackSelector,
+}) => {
+  const { track, trackMeta } = useTrack();
+  const TrackIcon = trackMeta.icon;
+
+  const navItems = BASE_NAV_ITEMS.map((item) => {
+    if (item.id === 'dsa') {
+      return {
+        ...item,
+        label: track === 'engineering' ? '75+ DSA Patterns' : trackMeta.practiceTitle,
+        icon: TrackIcon,
+      };
+    }
+    return item;
+  });
+
+  const categories = Array.from(new Set(navItems.map((item) => item.category)));
 
   // Maintain collapsible groups state with all open by default
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
 
   // Ensure active category is always expanded
-  const activeCategory = NAV_ITEMS.find((item) => item.id === activeTab)?.category;
+  const activeCategory = navItems.find((item) => item.id === activeTab)?.category;
   useEffect(() => {
     if (activeCategory && collapsedGroups[activeCategory]) {
       setCollapsedGroups((prev) => ({ ...prev, [activeCategory]: false }));
@@ -99,7 +130,37 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNavi
 
   return (
     <aside className="w-64 lg:w-72 flex-shrink-0 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto">
-      <div className="space-y-6">
+      <div className="space-y-4">
+        {/* Active Track Vertical Switcher Chip */}
+        <div
+          onClick={() => {
+            if (onOpenTrackSelector) {
+              soundFx.playClick();
+              onOpenTrackSelector();
+            }
+          }}
+          className={`p-3 rounded-2xl border cursor-pointer transition-all duration-150 pressable flex items-center justify-between ${
+            trackMeta.bgSubtle
+          } ${trackMeta.borderAccent} hover:border-white/20`}
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={`p-2 rounded-xl bg-slate-950 ${trackMeta.color} border border-white/10 shadow-sm`}>
+              <TrackIcon className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">
+                Active Discipline
+              </div>
+              <div className="text-xs font-bold text-white truncate font-display">
+                {trackMeta.shortLabel} Vertical
+              </div>
+            </div>
+          </div>
+          <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-slate-900/80 text-indigo-300 font-bold border border-white/10">
+            Switch ⇄
+          </span>
+        </div>
+
         {/* Landing Page Link Button */}
         {onNavigateLanding && (
           <button
@@ -119,7 +180,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNavi
 
         {/* Section Groups */}
         {categories.map((category) => {
-          const items = NAV_ITEMS.filter((item) => item.category === category);
+          const items = navItems.filter((item) => item.category === category);
           const meta = CATEGORY_META[category] || { label: category, color: 'bg-indigo-500' };
           const isCollapsed = !!collapsedGroups[category];
           const hasActiveItem = items.some((item) => item.id === activeTab);
@@ -153,7 +214,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNavi
               {!isCollapsed && (
                 <div className="space-y-1 pt-0.5">
                   {items.map((item) => {
-                    const Icon = item.icon;
+                    const ItemIcon = item.icon;
                     const isActive = activeTab === item.id;
                     return (
                       <button
@@ -175,7 +236,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNavi
                                 : 'bg-slate-800/80 text-slate-400'
                             }`}
                           >
-                            <Icon className="w-3.5 h-3.5" />
+                            <ItemIcon className="w-3.5 h-3.5" />
                           </div>
                           <span className="truncate tracking-tight">{item.label}</span>
                         </div>
@@ -211,10 +272,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNavi
       <div className="mt-8 p-3.5 rounded-2xl glass-subtle text-xs shadow-md">
         <div className="flex items-center gap-2 text-indigo-300 font-bold mb-1 font-display">
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-          <span>Hybrid Architecture</span>
+          <span>SWAYAM Hybrid OS</span>
         </div>
         <p className="text-[11px] text-slate-400 leading-relaxed font-normal">
-          Universal Omni-Learning + Placement Acceleration powered by Google Gemini.
+          Multi-discipline vertical learning across Engineering, Medicine, Law, Commerce, Civil Services & Humanities.
         </p>
       </div>
     </aside>

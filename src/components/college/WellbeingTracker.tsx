@@ -13,18 +13,29 @@ import {
   Meh,
   Frown,
   Activity,
+  Moon,
+  Users,
+  Send,
+  Bell,
+  Award,
 } from 'lucide-react';
 import {
   WellbeingCheckin,
   WorkloadAssessment,
   SelfReportedStress,
   EnergyLevel,
+  SleepLogEntry,
+  StudyBuddyConfig,
 } from '../../types';
+import { INITIAL_SLEEP_LOGS, INITIAL_STUDY_BUDDY } from '../../data/groupProjectsData';
+import { soundFx } from '../../lib/sound';
+import { toast } from '../../lib/toast';
 
 interface WellbeingTrackerProps {
   checkins: WellbeingCheckin[];
   workload: WorkloadAssessment;
   onRecordCheckin: (stress: SelfReportedStress, energy: EnergyLevel, notes?: string) => void;
+  onAwardXP?: (amount: number) => void;
 }
 
 const STRESS_OPTIONS: { id: SelfReportedStress; label: string; icon: string; color: string }[] = [
@@ -45,6 +56,7 @@ export const WellbeingTracker: React.FC<WellbeingTrackerProps> = ({
   checkins,
   workload,
   onRecordCheckin,
+  onAwardXP,
 }) => {
   const today = new Date().toISOString().split('T')[0];
   const todayCheckin = checkins.find((c) => c.date === today);
@@ -53,6 +65,74 @@ export const WellbeingTracker: React.FC<WellbeingTrackerProps> = ({
   const [energy, setEnergy] = useState<EnergyLevel>(todayCheckin?.energyLevel || 'HIGH');
   const [notes, setNotes] = useState(todayCheckin?.notes || '');
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // Sleep Debt Tracker State
+  const [sleepLogs, setSleepLogs] = useState<SleepLogEntry[]>(INITIAL_SLEEP_LOGS);
+  const [hoursInput, setHoursInput] = useState('7.0');
+  const [sleepQuality, setSleepQuality] = useState<SleepLogEntry['quality']>('RESTED');
+
+  // Study Buddy Accountability State
+  const [studyBuddy, setStudyBuddy] = useState<StudyBuddyConfig>(INITIAL_STUDY_BUDDY);
+  const [buddyNameInput, setBuddyNameInput] = useState(studyBuddy.buddyName);
+  const [buddyContactInput, setBuddyContactInput] = useState(studyBuddy.buddyContact);
+  const [buddyGoalInput, setBuddyGoalInput] = useState(studyBuddy.studyPactGoal);
+  const [isEditingBuddy, setIsEditingBuddy] = useState(false);
+
+  const handleRecordSleep = (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsedHours = parseFloat(hoursInput) || 7.0;
+    const newEntry: SleepLogEntry = {
+      id: `slp-${Date.now()}`,
+      date: today,
+      hoursSlept: parsedHours,
+      quality: sleepQuality,
+      targetHours: 8,
+    };
+
+    setSleepLogs((prev) => {
+      const filtered = prev.filter((p) => p.date !== today);
+      return [newEntry, ...filtered];
+    });
+
+    onAwardXP?.(15);
+    soundFx.playSuccess();
+    toast.success('Sleep Log Recorded', {
+      description: `${parsedHours} hrs logged for ${today}. Rolling 7-day debt recalculated.`,
+    });
+  };
+
+  const handleSendBuddyPing = () => {
+    setStudyBuddy((prev) => ({
+      ...prev,
+      lastPingDate: today,
+      totalPingsSent: prev.totalPingsSent + 1,
+    }));
+
+    onAwardXP?.(10);
+    soundFx.playLevelUp();
+    toast.success('⚡ Accountability Ping Broadcasted!', {
+      description: `Sent daily focus check-in to ${studyBuddy.buddyName} (${studyBuddy.buddyContact}). +10 XP gained!`,
+    });
+  };
+
+  const handleSaveBuddyConfig = (e: React.FormEvent) => {
+    e.preventDefault();
+    setStudyBuddy((prev) => ({
+      ...prev,
+      buddyName: buddyNameInput,
+      buddyContact: buddyContactInput,
+      studyPactGoal: buddyGoalInput,
+    }));
+    setIsEditingBuddy(false);
+    toast.success('Study Buddy Pact Updated');
+  };
+
+  // Calculate 7-Day Rolling Sleep Debt
+  const last7DaysLogs = sleepLogs.slice(0, 7);
+  const totalHours7Days = last7DaysLogs.reduce((acc, l) => acc + l.hoursSlept, 0);
+  const targetTotal7Days = last7DaysLogs.length * 8;
+  const sleepDebt = totalHours7Days - targetTotal7Days; // negative means debt
+  const avgSleep = last7DaysLogs.length > 0 ? (totalHours7Days / last7DaysLogs.length).toFixed(1) : '7.0';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -270,6 +350,221 @@ export const WellbeingTracker: React.FC<WellbeingTrackerProps> = ({
             </div>
           </div>
         </form>
+      </div>
+
+      {/* Part 4: 7-Day Rolling Sleep Debt Tracker & Study Buddy Accountability Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 7-Day Rolling Sleep Debt Tracker */}
+        <div className="bezel-shell p-6 space-y-5 bg-gradient-to-b from-slate-900 to-slate-950">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                <Moon className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">7-Day Rolling Sleep Debt</h3>
+                <p className="text-[11px] text-slate-400">Target: 8.0 hrs/night. Rolling total vs target.</p>
+              </div>
+            </div>
+            <div className={`px-2.5 py-1 rounded-full font-mono text-xs font-bold border ${
+              sleepDebt >= 0 
+                ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' 
+                : sleepDebt > -5 
+                ? 'bg-amber-500/10 text-amber-300 border-amber-500/30' 
+                : 'bg-rose-500/10 text-rose-300 border-rose-500/30'
+            }`}>
+              {sleepDebt >= 0 ? `+${sleepDebt.toFixed(1)}h Surplus` : `${sleepDebt.toFixed(1)}h Debt`}
+            </div>
+          </div>
+
+          {/* Quick Metrics Bar */}
+          <div className="grid grid-cols-3 gap-2.5 text-center">
+            <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+              <div className="text-[10px] uppercase font-mono text-slate-400">7D Average</div>
+              <div className="text-lg font-bold text-white font-mono">{avgSleep}h</div>
+            </div>
+            <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+              <div className="text-[10px] uppercase font-mono text-slate-400">Recorded Days</div>
+              <div className="text-lg font-bold text-indigo-400 font-mono">{last7DaysLogs.length}/7</div>
+            </div>
+            <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+              <div className="text-[10px] uppercase font-mono text-slate-400">Status</div>
+              <div className={`text-xs font-bold font-mono mt-1 ${
+                sleepDebt >= 0 ? 'text-emerald-400' : sleepDebt > -4 ? 'text-amber-400' : 'text-rose-400'
+              }`}>
+                {sleepDebt >= 0 ? 'Optimum' : sleepDebt > -4 ? 'Mild Fatigue' : 'High Deficit'}
+              </div>
+            </div>
+          </div>
+
+          {/* Log Sleep Form */}
+          <form onSubmit={handleRecordSleep} className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+            <span className="text-xs font-semibold text-slate-200 block">Log Last Night's Sleep (+15 XP)</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">Hours Slept</label>
+                <input
+                  type="number"
+                  step="0.5"
+                  min="1"
+                  max="16"
+                  value={hoursInput}
+                  onChange={(e) => setHoursInput(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">Quality</label>
+                <select
+                  value={sleepQuality}
+                  onChange={(e) => setSleepQuality(e.target.value as SleepLogEntry['quality'])}
+                  className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="RESTED">🌟 Deep & Rested</option>
+                  <option value="OKAY">😐 Normal / Okay</option>
+                  <option value="TIRED">🥱 Interrupted / Tired</option>
+                </select>
+              </div>
+            </div>
+            <button
+              type="submit"
+              className="w-full py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/30"
+            >
+              Log Sleep Entry
+            </button>
+          </form>
+
+          {/* Rolling Logs List */}
+          <div className="space-y-1.5">
+            <span className="text-[10px] uppercase font-mono text-slate-400 font-semibold">Recent Logs</span>
+            <div className="space-y-1 max-h-36 overflow-y-auto pr-1">
+              {last7DaysLogs.map((log) => (
+                <div
+                  key={log.id}
+                  className="flex items-center justify-between p-2 rounded-lg bg-slate-900/60 border border-slate-800 text-xs"
+                >
+                  <span className="font-mono text-[11px] text-slate-400">{log.date}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-white">{log.hoursSlept}h</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${
+                      log.quality === 'EXCELLENT' || log.quality === 'RESTED' ? 'text-emerald-300 bg-emerald-500/10' :
+                      log.quality === 'TIRED' ? 'text-amber-300 bg-amber-500/10' :
+                      'text-rose-300 bg-rose-500/10'
+                    }`}>
+                      {log.quality}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Study Buddy Accountability Card */}
+        <div className="bezel-shell p-6 space-y-5 bg-gradient-to-b from-slate-900 to-slate-950">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-pink-500/10 text-pink-400 border border-pink-500/20">
+                <Users className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Study Buddy Accountability</h3>
+                <p className="text-[11px] text-slate-400">Mutual focus pact & daily study check-in pings.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsEditingBuddy(!isEditingBuddy)}
+              className="text-[11px] text-indigo-400 hover:text-indigo-300 underline font-medium"
+            >
+              {isEditingBuddy ? 'Cancel' : 'Edit Pact'}
+            </button>
+          </div>
+
+          {isEditingBuddy ? (
+            <form onSubmit={handleSaveBuddyConfig} className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">Buddy Name</label>
+                <input
+                  type="text"
+                  value={buddyNameInput}
+                  onChange={(e) => setBuddyNameInput(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">Buddy Contact (Email / Discord)</label>
+                <input
+                  type="text"
+                  value={buddyContactInput}
+                  onChange={(e) => setBuddyContactInput(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">Study Pact Goal</label>
+                <input
+                  type="text"
+                  value={buddyGoalInput}
+                  onChange={(e) => setBuddyGoalInput(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all"
+              >
+                Save Pact Configuration
+              </button>
+            </form>
+          ) : (
+            <div className="space-y-4">
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-600 to-pink-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                      {studyBuddy.buddyName.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-white">{studyBuddy.buddyName}</div>
+                      <div className="text-[11px] text-slate-400">{studyBuddy.buddyContact}</div>
+                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-pink-500/10 text-pink-300 border border-pink-500/30">
+                    Active Pact
+                  </span>
+                </div>
+
+                <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-xs">
+                  <span className="text-[10px] uppercase font-mono text-slate-400 font-semibold block mb-0.5">Focus Pact Target:</span>
+                  <p className="text-slate-200 italic font-mono text-[11px]">"{studyBuddy.studyPactGoal}"</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-center text-xs">
+                  <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
+                    <span className="text-[10px] font-mono text-slate-400 block">Total Pings</span>
+                    <span className="font-bold text-white font-mono">{studyBuddy.totalPingsSent} Sent</span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
+                    <span className="text-[10px] font-mono text-slate-400 block">Last Check-in</span>
+                    <span className="font-bold text-emerald-400 font-mono">{studyBuddy.lastPingDate}</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSendBuddyPing}
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-pink-600 to-indigo-600 hover:from-pink-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-pink-600/20 transition-all flex items-center justify-center gap-2"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>Send Daily Accountability Ping (+10 XP)</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Past Check-ins Timeline */}

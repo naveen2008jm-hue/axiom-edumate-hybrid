@@ -32,6 +32,7 @@ import {
   Assignment,
   WorkloadAssessment,
 } from '../../types';
+import { useTrack } from '../../context/TrackContext';
 import { soundFx } from '../../lib/sound';
 import { toast } from '../../lib/toast';
 
@@ -64,6 +65,9 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   assignments = [],
   workload,
 }) => {
+  const { track, trackMeta } = useTrack();
+  const TrackIcon = trackMeta.icon;
+
   const dsaSolved = dsaList.filter((t) => t.completed).length;
   const activeCourse = omniCourses.find((c) => c.isActive) || omniCourses[0];
   const activeAppsCount = internships.filter((i) => i.status !== 'Rejected').length;
@@ -95,10 +99,16 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         <div className="bezel-core p-6 sm:p-8 relative overflow-hidden bg-gradient-to-br from-indigo-950/40 via-slate-950 to-purple-950/30">
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="space-y-3 max-w-2xl">
-              <div className="eyebrow-badge">
-                <Sparkles className="w-3 h-3 text-indigo-400" />
-                <span>CAREER COMMAND CENTER</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="eyebrow-badge">
+                  <Sparkles className="w-3 h-3 text-indigo-400" />
+                  <span>COMMAND CENTER</span>
+                </div>
+                <span className={`text-[10px] font-mono px-2.5 py-1 rounded-full ${trackMeta.bgSubtle} ${trackMeta.color} border ${trackMeta.borderAccent} font-bold`}>
+                  {trackMeta.label}
+                </span>
               </div>
+
               <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight font-display">
                 Welcome back,{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-200 to-pink-300">
@@ -107,11 +117,9 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 !
               </h2>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-                Targeting top software engineering roles at{' '}
-                <strong className="text-white font-semibold">
-                  {profile.targetCompanies.slice(0, 3).join(', ')}
-                </strong>
-                . Accelerate your career with synchronized DSA patterns, academic planning, and Omni-Skill AI curricula.
+                Preparing for <strong className="text-white font-semibold">{trackMeta.targetExamsOrRoles}</strong>
+                {profile.targetCompanies?.length > 0 && ` (${profile.targetCompanies.slice(0, 3).join(', ')})`}.
+                Accelerate your daily cadence with synchronized practice sheets, academic timetable scheduling, and Omni-Skill AI curricula.
               </p>
             </div>
 
@@ -119,7 +127,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             <div className="flex items-center gap-3 flex-shrink-0 flex-wrap sm:flex-nowrap">
               <button
                 onClick={() => handleNav('omni-skill')}
-                className="btn-island group flex items-center justify-between pl-5 pr-2 py-2 rounded-full bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 border border-white/10"
+                className="btn-island group flex items-center justify-between pl-5 pr-2 py-2 rounded-full bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 border border-white/10 pressable"
               >
                 <span className="mr-3 tracking-wide">Architect Omni-Skill</span>
                 <div className="btn-icon-wrapper w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white">
@@ -129,11 +137,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
               <button
                 onClick={() => handleNav('dsa')}
-                className="btn-island group flex items-center justify-between pl-5 pr-2 py-2 rounded-full bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white font-semibold text-xs border border-white/10 shadow-sm"
+                className="btn-island group flex items-center justify-between pl-5 pr-2 py-2 rounded-full bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white font-semibold text-xs border border-white/10 shadow-sm pressable"
               >
-                <span className="mr-3 tracking-wide">75+ DSA Sheet</span>
+                <span className="mr-3 tracking-wide">{track === 'engineering' ? '75+ DSA Sheet' : trackMeta.practiceTitle}</span>
                 <div className="btn-icon-wrapper w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-300 group-hover:text-white">
-                  <Code2 className="w-4 h-4" />
+                  <TrackIcon className="w-4 h-4" />
                 </div>
               </button>
             </div>
@@ -143,31 +151,31 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
       {/* Top 4 Metrics Stats Grid (Double-Bezel Bento) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* DSA Solved */}
+        {/* Practice Sheet Mastery */}
         <div
           onClick={() => handleNav('dsa')}
           className="bezel-shell cursor-pointer group pressable animate-fade-in-up stagger-1"
         >
           <div className="bezel-core p-5 space-y-3 h-full flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono text-slate-400 uppercase font-bold tracking-wider">DSA Syllabus</span>
-              <div className="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 group-hover:scale-105 transition-transform duration-150">
-                <Code2 className="w-4 h-4" />
+              <span className="text-[10px] font-mono text-slate-400 uppercase font-bold tracking-wider">Practice Syllabus</span>
+              <div className={`p-2 rounded-xl ${trackMeta.bgSubtle} border ${trackMeta.borderAccent} ${trackMeta.color} group-hover:scale-105 transition-transform duration-150`}>
+                <TrackIcon className="w-4 h-4" />
               </div>
             </div>
             <div>
               <div className="text-3xl font-extrabold text-white font-mono tracking-tight">
-                {dsaSolved} <span className="text-sm font-normal text-slate-500">/ {dsaList.length}</span>
+                {dsaSolved} <span className="text-sm font-normal text-slate-500">/ {dsaList.length || 75}</span>
               </div>
               <div className="text-[11px] text-indigo-400 font-mono font-medium flex items-center gap-1.5 mt-1">
-                <span>{Math.round((dsaSolved / (dsaList.length || 1)) * 100)}% Pattern Coverage</span>
+                <span>{Math.round((dsaSolved / (dsaList.length || 1)) * 100)}% Syllabus Mastery</span>
                 <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Running CGPA */}
+        {/* Running CGPA / Academics */}
         <div
           onClick={() => handleNav('academics')}
           className="bezel-shell cursor-pointer group pressable animate-fade-in-up stagger-2"
@@ -184,31 +192,31 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 {runningCgpa} <span className="text-sm font-normal text-slate-500">/ 10</span>
               </div>
               <div className="text-[11px] text-emerald-400 font-mono font-medium flex items-center gap-1.5 mt-1">
-                <span>Engineering Academics</span>
+                <span>Academics & Core Subjects</span>
                 <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Job Pipeline */}
+        {/* Opportunities Pipeline */}
         <div
           onClick={() => handleNav('internships')}
           className="bezel-shell cursor-pointer group pressable animate-fade-in-up stagger-3"
         >
           <div className="bezel-core p-5 space-y-3 h-full flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono text-slate-400 uppercase font-bold tracking-wider">Active Applications</span>
+              <span className="text-[10px] font-mono text-slate-400 uppercase font-bold tracking-wider">Target Opportunities</span>
               <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 group-hover:scale-105 transition-transform duration-150">
                 <Briefcase className="w-4 h-4" />
               </div>
             </div>
             <div>
               <div className="text-3xl font-extrabold text-white font-mono tracking-tight">
-                {activeAppsCount} <span className="text-sm font-normal text-slate-500">Roles</span>
+                {activeAppsCount} <span className="text-sm font-normal text-slate-500">Active</span>
               </div>
               <div className="text-[11px] text-purple-400 font-mono font-medium flex items-center gap-1.5 mt-1">
-                <span>Kanban Pipeline</span>
+                <span>Opportunities Kanban</span>
                 <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </div>
@@ -255,7 +263,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               <span className="text-xs font-bold text-slate-200">Today's Timetable</span>
             </div>
             <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
-              {todayClasses.length} Classes
+              {todayClasses.length} Sessions
             </span>
           </div>
           <p className="text-[11px] text-slate-400 mt-2 truncate font-mono">
@@ -320,7 +328,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
       </div>
 
-      {/* Grid: Active Omni Course on Left, Upcoming Exams & Quick Links on Right */}
+      {/* Grid: Active Omni Course on Left, Upcoming Exams & AI Mentor on Right */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Active Omni-Skill Spotlight */}
         <div className="lg:col-span-7 bezel-shell">
@@ -402,7 +410,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2 font-display">
                   <Calendar className="w-4 h-4 text-indigo-400" />
-                  <span>Semester Exam Countdown</span>
+                  <span>Semester Exam & Test Countdown</span>
                 </h3>
                 <button
                   onClick={() => handleNav('academics')}
@@ -439,10 +447,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             <div className="bezel-core p-5 bg-gradient-to-r from-purple-950/50 via-slate-950 to-indigo-950/50 flex items-center justify-between">
               <div className="space-y-1">
                 <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-purple-400">
-                  AI PLACEMENT MENTOR
+                  AI EXAM & CAREER MENTOR
                 </div>
                 <div className="text-sm font-bold text-white font-display">
-                  Ask algorithm & interview questions ↗
+                  Ask exam, clinical, case analysis & interview queries ↗
                 </div>
               </div>
               <div className="w-9 h-9 rounded-full bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300 group-hover:scale-105 group-hover:translate-x-0.5 transition-transform duration-150">

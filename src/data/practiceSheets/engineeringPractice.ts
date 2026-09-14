@@ -1,0 +1,41 @@
+import { PracticeSheetConfig } from '../../types';
+import { DSA_SYLLABUS } from '../dsaSyllabus';
+
+export const ENGINEERING_PRACTICE_CONFIG: PracticeSheetConfig = {
+  track: 'engineering',
+  sheetTitle: '75+ Blind & NeetCode DSA Pattern Mastery',
+  sheetSubtitle: 'Curated high-frequency algorithm patterns tested at Google, Microsoft, Uber & Atlassian.',
+  categoryTitle: 'Algorithm Paradigms',
+  actionLabel: 'Solve on LeetCode',
+  externalPlatformName: 'LeetCode GraphQL Proxy',
+  statProxyName: 'Live LeetCode Stats',
+  statProxyDescription: 'Live synchronization with LeetCode API, acceptance rates, and submission heatmap.',
+  categories: [
+    'All',
+    'Arrays',
+    'Strings',
+    'Two Pointers',
+    'Sliding Window',
+    'Linked Lists',
+    'Stacks & Queues',
+    'Trees & BST',
+    'Graphs',
+    'Dynamic Programming',
+    'Greedy',
+    'Backtracking',
+    'Bit Manipulation',
+    'Trie',
+  ],
+  defaultTopics: DSA_SYLLABUS.map((t) => ({
+    id: t.id,
+    category: t.category,
+    title: t.title,
+    difficulty: t.difficulty,
+    keyPattern: t.keyPattern,
+    externalUrl: t.leetcodeUrl,
+    referenceCode: t.leetcodeSlug,
+    completed: t.completed,
+    completedAt: t.completedAt,
+    notes: t.notes,
+  })),
+};

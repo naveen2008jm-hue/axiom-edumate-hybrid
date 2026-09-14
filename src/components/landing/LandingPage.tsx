@@ -24,6 +24,10 @@ import {
   Bot,
   Play,
   Award,
+  Stethoscope,
+  Scale,
+  TrendingUp,
+  BookOpen,
 } from 'lucide-react';
 import { ThemeMode } from '../../types';
 import { soundFx } from '../../lib/sound';
@@ -33,15 +37,28 @@ interface LandingPageProps {
   theme: ThemeMode;
   onToggleTheme: () => void;
   onStartDemo?: () => void;
+  onOpenAuth?: (mode: 'login' | 'signup') => void;
+  isAuthenticated?: boolean;
 }
+
+const DISCIPLINES = [
+  { name: 'Engineering & CS', icon: Code2, color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30' },
+  { name: 'Medical & NEET-PG', icon: Stethoscope, color: 'text-rose-400 bg-rose-500/10 border-rose-500/30' },
+  { name: 'Law & Judiciary', icon: Scale, color: 'text-amber-400 bg-amber-500/10 border-amber-500/30' },
+  { name: 'Commerce & CA/CFA', icon: TrendingUp, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' },
+  { name: 'UPSC & Civil Services', icon: Award, color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30' },
+  { name: 'Humanities & Research', icon: BookOpen, color: 'text-purple-400 bg-purple-500/10 border-purple-500/30' },
+];
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   onEnterApp,
   theme,
   onToggleTheme,
   onStartDemo,
+  onOpenAuth,
+  isAuthenticated = false,
 }) => {
-  const [activePreviewTab, setActivePreviewTab] = useState<'overview' | 'omni' | 'dsa' | 'college'>('overview');
+  const [activePreviewTab, setActivePreviewTab] = useState<'overview' | 'omni' | 'practice' | 'college'>('omni');
 
   const handleLaunch = () => {
     soundFx.playLevelUp();
@@ -76,21 +93,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
             <div>
               <span className="text-base font-extrabold tracking-tight text-white font-display flex items-center gap-2">
-                AXIOM <span className="text-indigo-400 font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 hidden sm:inline">HYBRID</span>
+                AXIOM <span className="text-indigo-400 font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 hidden sm:inline">SWAYAM HYBRID</span>
               </span>
             </div>
           </div>
 
           {/* Center Nav Links (Desktop) */}
           <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-slate-300">
+            <a href="#disciplines" className="hover:text-indigo-400 transition-colors">6 Disciplines</a>
             <a href="#pillars" className="hover:text-indigo-400 transition-colors">Four Pillars</a>
-            <a href="#preview" className="hover:text-indigo-400 transition-colors">Command Center</a>
+            <a href="#preview" className="hover:text-indigo-400 transition-colors">Interface Preview</a>
             <a href="#workflow" className="hover:text-indigo-400 transition-colors">How It Works</a>
-            <a href="#architecture" className="hover:text-indigo-400 transition-colors">Architecture</a>
           </nav>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3">
             {onStartDemo && (
               <button
                 onClick={handleDemoLaunch}
@@ -113,15 +130,41 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               {theme === 'light' ? <Sun className="w-4 h-4 text-amber-600" /> : <Moon className="w-4 h-4 text-indigo-400" />}
             </button>
 
-            <button
-              onClick={handleLaunch}
-              className="btn-island group flex items-center justify-between pl-4 pr-1.5 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 border border-white/10 pressable"
-            >
-              <span className="mr-2.5 tracking-wide">Enter Platform</span>
-              <div className="btn-icon-wrapper w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white">
-                <ArrowRight className="w-3.5 h-3.5" />
-              </div>
-            </button>
+            {!isAuthenticated && onOpenAuth ? (
+              <>
+                <button
+                  onClick={() => {
+                    soundFx.playClick();
+                    onOpenAuth('login');
+                  }}
+                  className="px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition border border-white/5 pressable"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => {
+                    soundFx.playLevelUp();
+                    onOpenAuth('signup');
+                  }}
+                  className="btn-island group flex items-center justify-between pl-4 pr-1.5 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 border border-white/10 pressable"
+                >
+                  <span className="mr-2 tracking-wide">Sign Up</span>
+                  <div className="btn-icon-wrapper w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white">
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </div>
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={handleLaunch}
+                className="btn-island group flex items-center justify-between pl-4 pr-1.5 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 border border-white/10 pressable"
+              >
+                <span className="mr-2.5 tracking-wide">Enter Platform</span>
+                <div className="btn-icon-wrapper w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white">
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -129,35 +172,48 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* -------------------------------------------------------------------- */}
       {/* HERO SECTION                                                         */}
       {/* -------------------------------------------------------------------- */}
-      <section className="relative z-10 pt-16 pb-20 px-4 sm:px-6 lg:px-8 max-w-[1400px] w-full mx-auto text-center space-y-8">
+      <section className="relative z-10 pt-16 pb-16 px-4 sm:px-6 lg:px-8 max-w-[1400px] w-full mx-auto text-center space-y-8">
         {/* Eyebrow badge */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-mono text-xs font-bold tracking-wider uppercase animate-fade-in-up shadow-sm">
           <Sparkles className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
-          <span>Universal Omni-Learning & Career Operating System</span>
+          <span>Universal Multi-Discipline Operating System</span>
         </div>
 
         {/* Main Headline */}
         <div className="max-w-4xl mx-auto space-y-4">
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.08] font-display">
-            Accelerate from Engineering Student to{' '}
+            Deconstruct Any Skill into{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400">
-              Tier-1 Software Architect
+              Actionable AI Mastery
             </span>
           </h1>
           <p className="text-sm sm:text-lg text-slate-300 max-w-2xl mx-auto font-normal leading-relaxed">
-            One cohesive glassmorphic engine unifying <strong>75+ DSA pattern tracking</strong>, <strong>AI-synthesized mastery curriculums</strong>, <strong>adaptive timetable clash detection</strong>, and career placement pipelines.
+            Modeled on SWAYAM's discipline-vertical approach. One cohesive glassmorphic engine unifying <strong>Omni-Skill universal curriculum synthesis</strong> (coding, medicine, law, commerce, civil services), <strong>curated practice sheets</strong>, <strong>adaptive timetable clash detection</strong>, and career opportunity pipelines.
           </p>
         </div>
 
         {/* Action CTAs */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-          <button
-            onClick={handleLaunch}
-            className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-sm sm:text-base shadow-xl shadow-indigo-600/35 border border-white/20 pressable flex items-center justify-center gap-3 group"
-          >
-            <span>Launch Command Center</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
+          {!isAuthenticated && onOpenAuth ? (
+            <button
+              onClick={() => {
+                soundFx.playLevelUp();
+                onOpenAuth('signup');
+              }}
+              className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-sm sm:text-base shadow-xl shadow-indigo-600/35 border border-white/20 pressable flex items-center justify-center gap-3 group"
+            >
+              <span>Get Started — Sign Up Free</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+          ) : (
+            <button
+              onClick={handleLaunch}
+              className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-sm sm:text-base shadow-xl shadow-indigo-600/35 border border-white/20 pressable flex items-center justify-center gap-3 group"
+            >
+              <span>Launch Command Center</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+          )}
 
           {onStartDemo && (
             <button
@@ -169,35 +225,41 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </button>
           )}
 
-          <a
-            href="#pillars"
-            className="w-full sm:w-auto px-7 py-4 rounded-full bg-slate-900/80 hover:bg-slate-800 text-slate-200 border border-white/10 text-sm font-bold pressable flex items-center justify-center gap-2"
-          >
-            <span>Explore 4 Core Pillars</span>
-            <ChevronRight className="w-4 h-4 text-slate-400" />
-          </a>
+          {!isAuthenticated && onOpenAuth && (
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                onOpenAuth('login');
+              }}
+              className="w-full sm:w-auto px-7 py-4 rounded-full bg-slate-900/80 hover:bg-slate-800 text-slate-200 border border-white/10 text-sm font-bold pressable flex items-center justify-center gap-2"
+            >
+              <span>Existing User? Sign In</span>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </button>
+          )}
         </div>
 
-        {/* Live Key Stats Bar (Double-Bezel) */}
-        <div className="pt-8 max-w-4xl mx-auto">
+        {/* Multi-Discipline Track Icons Strip */}
+        <div id="disciplines" className="pt-6 max-w-4xl mx-auto">
           <div className="bezel-shell">
-            <div className="bezel-core p-4 sm:p-5 grid grid-cols-2 md:grid-cols-4 gap-4 divide-y md:divide-y-0 md:divide-x divide-white/5">
-              <div className="space-y-0.5 pt-2 md:pt-0">
-                <div className="text-2xl sm:text-3xl font-black font-mono text-white">75+</div>
-                <div className="text-[11px] font-mono text-slate-400 uppercase font-semibold">DSA Core Patterns</div>
-              </div>
-              <div className="space-y-0.5 pt-2 md:pt-0">
-                <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-400">100%</div>
-                <div className="text-[11px] font-mono text-slate-400 uppercase font-semibold">Clash-Free Timetable</div>
-              </div>
-              <div className="space-y-0.5 pt-2 md:pt-0">
-                <div className="text-2xl sm:text-3xl font-black font-mono text-indigo-400">Gemini 2.5</div>
-                <div className="text-[11px] font-mono text-slate-400 uppercase font-semibold">AI Skill Architect</div>
-              </div>
-              <div className="space-y-0.5 pt-2 md:pt-0">
-                <div className="text-2xl sm:text-3xl font-black font-mono text-amber-300">Dual Theme</div>
-                <div className="text-[11px] font-mono text-slate-400 uppercase font-semibold">CRT & Liquid Glass</div>
-              </div>
+            <div className="bezel-core p-4 sm:p-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {DISCIPLINES.map((d, i) => {
+                const DiscIcon = d.icon;
+                return (
+                  <div
+                    key={i}
+                    onClick={handleLaunch}
+                    className="p-3 rounded-2xl bg-slate-900/90 border border-white/5 hover:border-indigo-500/40 cursor-pointer transition text-center space-y-2 pressable group"
+                  >
+                    <div className={`w-9 h-9 mx-auto rounded-xl flex items-center justify-center border ${d.color} group-hover:scale-105 transition-transform`}>
+                      <DiscIcon className="w-4 h-4" />
+                    </div>
+                    <div className="text-[11px] font-bold text-slate-200 leading-tight truncate">
+                      {d.name}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -206,7 +268,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* -------------------------------------------------------------------- */}
       {/* PRODUCT SHOWCASE BROWSER MOCKUP                                      */}
       {/* -------------------------------------------------------------------- */}
-      <section id="preview" className="relative z-10 py-16 px-4 sm:px-6 lg:px-8 max-w-[1400px] w-full mx-auto">
+      <section id="preview" className="relative z-10 py-12 px-4 sm:px-6 lg:px-8 max-w-[1400px] w-full mx-auto">
         <div className="space-y-6">
           <div className="text-center space-y-2 max-w-2xl mx-auto">
             <div className="eyebrow-badge">
@@ -214,7 +276,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <span>LIVE PLATFORM INTERFACE</span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-extrabold text-white font-display">
-              Designed for Flow, Speed & Cognitive Focus
+              Designed for Speed, Clarity & Multi-Discipline Mastery
             </h2>
             <p className="text-xs sm:text-sm text-slate-300">
               Switch between views to explore how Axiom orchestrates your daily academic and career sprints.
@@ -238,74 +300,96 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 {/* View Switcher Tabs inside mockup */}
                 <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900/90 border border-white/5 text-xs font-semibold overflow-x-auto scrollbar-none">
                   <button
+                    onClick={() => setActivePreviewTab('omni')}
+                    className={`px-3 py-1.5 rounded-lg transition-colors ${
+                      activePreviewTab === 'omni'
+                        ? 'bg-indigo-600 text-white shadow-sm font-bold'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Omni-Skill Architect
+                  </button>
+                  <button
                     onClick={() => setActivePreviewTab('overview')}
                     className={`px-3 py-1.5 rounded-lg transition-colors ${
                       activePreviewTab === 'overview'
-                        ? 'bg-indigo-600 text-white shadow-sm'
+                        ? 'bg-indigo-600 text-white shadow-sm font-bold'
                         : 'text-slate-400 hover:text-white'
                     }`}
                   >
                     Command Center
                   </button>
                   <button
-                    onClick={() => setActivePreviewTab('omni')}
+                    onClick={() => setActivePreviewTab('practice')}
                     className={`px-3 py-1.5 rounded-lg transition-colors ${
-                      activePreviewTab === 'omni'
-                        ? 'bg-indigo-600 text-white shadow-sm'
+                      activePreviewTab === 'practice'
+                        ? 'bg-indigo-600 text-white shadow-sm font-bold'
                         : 'text-slate-400 hover:text-white'
                     }`}
                   >
-                    Omni-Skill AI
-                  </button>
-                  <button
-                    onClick={() => setActivePreviewTab('dsa')}
-                    className={`px-3 py-1.5 rounded-lg transition-colors ${
-                      activePreviewTab === 'dsa'
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    75+ DSA Sheet
+                    Practice Sheets
                   </button>
                   <button
                     onClick={() => setActivePreviewTab('college')}
                     className={`px-3 py-1.5 rounded-lg transition-colors ${
                       activePreviewTab === 'college'
-                        ? 'bg-indigo-600 text-white shadow-sm'
+                        ? 'bg-indigo-600 text-white shadow-sm font-bold'
                         : 'text-slate-400 hover:text-white'
                     }`}
                   >
-                    College Hub
+                    Timetable & Wellbeing
                   </button>
                 </div>
               </div>
 
-              {/* Dynamic Preview Content */}
-              <div className="rounded-2xl bg-slate-950/80 p-6 border border-white/5 min-h-[360px] flex flex-col justify-between">
-                {activePreviewTab === 'overview' && (
-                  <div className="space-y-5 animate-fade-in-up">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-gradient-to-r from-indigo-950/60 to-purple-950/40 border border-indigo-500/20">
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-mono text-indigo-300 font-bold uppercase tracking-wider">COMMAND CENTER PULSE</span>
-                        <h4 className="text-lg font-bold text-white font-display">Targeting SDE Roles at Google, Microsoft, Atlassian</h4>
-                        <p className="text-xs text-slate-300">Synchronized Daily Agenda • 7-Day Active Streak • 420 XP Earned</p>
+              {/* View Content Preview */}
+              <div className="p-4 sm:p-6 rounded-2xl bg-slate-950/70 border border-white/5 space-y-4">
+                {activePreviewTab === 'omni' && (
+                  <div className="space-y-4 animate-fade-in-up">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] font-mono text-indigo-400 font-bold uppercase">UNIVERSAL SKILL ARCHITECT</span>
+                        <h4 className="text-lg font-bold text-white font-display">Deconstruct Any Discipline into Daily Masteries</h4>
                       </div>
-                      <button onClick={handleLaunch} className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 pressable flex-shrink-0">
-                        <span>Open Dashboard</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
+                      <span className="px-2.5 py-1 rounded-full bg-cyan-500/15 text-cyan-300 font-mono text-xs font-bold">Physical & Conceptual</span>
                     </div>
+                    <p className="text-xs text-slate-300">Generate structured day-by-day drills with actionable step-by-step checklists and generative diagrammatic prompts.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                      <div className="p-3 rounded-xl bg-slate-900 border border-white/5 space-y-1">
+                        <span className="text-indigo-300 font-bold font-mono">Day 1: Baseline Mechanics</span>
+                        <p className="text-[11px] text-slate-400">Foundational posture & environment setup</p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-900 border border-white/5 space-y-1">
+                        <span className="text-purple-300 font-bold font-mono">Day 2: Core Drills</span>
+                        <p className="text-[11px] text-slate-400">Isolate sub-skills with deliberate repetitions</p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-900 border border-white/5 space-y-1">
+                        <span className="text-emerald-300 font-bold font-mono">Day 3: Speed & Integration</span>
+                        <p className="text-[11px] text-slate-400">End-to-end fluid execution & rubric test</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
+                {activePreviewTab === 'overview' && (
+                  <div className="space-y-4 animate-fade-in-up">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] font-mono text-indigo-400 font-bold uppercase">COMMAND CENTER HUD</span>
+                        <h4 className="text-lg font-bold text-white font-display">Command Center Dashboard</h4>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 font-mono text-xs font-bold">7-Day Streak Active</span>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="p-4 rounded-xl bg-slate-900/80 border border-white/5 space-y-1">
-                        <div className="text-[10px] font-mono text-slate-400 uppercase">DSA Pattern Coverage</div>
+                        <div className="text-[10px] font-mono text-slate-400 uppercase">Practice Sheet Progress</div>
                         <div className="text-2xl font-bold font-mono text-indigo-300">42 / 75 Solved</div>
                         <div className="text-[11px] text-emerald-400 font-mono">56% Completed</div>
                       </div>
                       <div className="p-4 rounded-xl bg-slate-900/80 border border-white/5 space-y-1">
                         <div className="text-[10px] font-mono text-slate-400 uppercase">Today's Schedule</div>
-                        <div className="text-2xl font-bold font-mono text-white">4 Classes</div>
-                        <div className="text-[11px] text-cyan-300 font-mono">Next: DAA (09:00 AM)</div>
+                        <div className="text-2xl font-bold font-mono text-white">4 Sessions</div>
+                        <div className="text-[11px] text-cyan-300 font-mono">Next: Core Lecture (09:00 AM)</div>
                       </div>
                       <div className="p-4 rounded-xl bg-slate-900/80 border border-white/5 space-y-1">
                         <div className="text-[10px] font-mono text-slate-400 uppercase">Cognitive Workload</div>
@@ -316,39 +400,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </div>
                 )}
 
-                {activePreviewTab === 'omni' && (
+                {activePreviewTab === 'practice' && (
                   <div className="space-y-4 animate-fade-in-up">
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="text-[10px] font-mono text-indigo-400 font-bold uppercase">AI CURRICULUM ARCHITECT</span>
-                        <h4 className="text-lg font-bold text-white font-display">Mastering Distributed Consensus (Raft & Paxos)</h4>
+                        <span className="text-[10px] font-mono text-indigo-400 font-bold uppercase">CURATED DISCIPLINE SHEETS</span>
+                        <h4 className="text-lg font-bold text-white font-display">Track-Specific Practice Engine</h4>
                       </div>
-                      <span className="px-2.5 py-1 rounded-full bg-cyan-500/15 text-cyan-300 font-mono text-xs font-bold">Conceptual Track</span>
-                    </div>
-                    <p className="text-xs text-slate-300">Deconstructed from first principles into term timeouts, log replication RPCs, and state machine transitions.</p>
-                    <div className="p-3.5 rounded-xl bg-slate-900/90 border border-white/5 flex items-center justify-between text-xs">
-                      <span className="font-mono text-slate-300">Day 1: The Consensus Problem & Log Replication</span>
-                      <span className="text-indigo-400 font-bold font-mono">+25 XP / Day</span>
-                    </div>
-                  </div>
-                )}
-
-                {activePreviewTab === 'dsa' && (
-                  <div className="space-y-4 animate-fade-in-up">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-[10px] font-mono text-indigo-400 font-bold uppercase">CURATED 75+ PATTERNS</span>
-                        <h4 className="text-lg font-bold text-white font-display">Algorithm Mastery Track</h4>
-                      </div>
-                      <span className="text-xs font-mono text-slate-400">Syncs with LeetCode API</span>
+                      <span className="text-xs font-mono text-slate-400">UPSC • NEET-PG • CA • CLAT • SDE</span>
                     </div>
                     <div className="space-y-2">
                       <div className="p-3 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-between text-xs">
-                        <span className="font-bold text-white">Sliding Window Maximum (Deque O(n))</span>
+                        <span className="font-bold text-white">Basic Structure Doctrine & Judicial Review (Art 368)</span>
                         <span className="px-2 py-0.5 rounded bg-rose-500/15 text-rose-300 font-mono text-[10px] font-bold">HARD</span>
                       </div>
                       <div className="p-3 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-between text-xs">
-                        <span className="font-bold text-white">Topological Sort BFS (Kahn's Algorithm)</span>
+                        <span className="font-bold text-white">Acute Coronary Syndrome ECG Localization & PCI Norms</span>
                         <span className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 font-mono text-[10px] font-bold">MEDIUM</span>
                       </div>
                     </div>
@@ -366,11 +433,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       <div className="p-3 rounded-xl bg-slate-900 border border-white/5 space-y-1">
-                        <span className="text-indigo-300 font-bold">Design & Analysis of Algorithms</span>
+                        <span className="text-indigo-300 font-bold">Core Academic Lecture</span>
                         <p className="text-[11px] text-slate-400">09:00 - 10:30 AM • Hall 302</p>
                       </div>
                       <div className="p-3 rounded-xl bg-slate-900 border border-white/5 space-y-1">
-                        <span className="text-amber-300 font-bold">Producer-Consumer Thread Pool</span>
+                        <span className="text-amber-300 font-bold">Coursework Submission</span>
                         <p className="text-[11px] text-rose-400 font-mono">Due in 2 Days (High Priority)</p>
                       </div>
                     </div>
@@ -379,7 +446,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
                 <div className="pt-4 flex items-center justify-between border-t border-white/5 text-[11px] text-slate-400 font-mono">
                   <span>⚡ Powered by Google Gemini 2.5</span>
-                  <button onClick={handleLaunch} className="text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1">
+                  <button onClick={handleLaunch} className="text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1 pressable">
                     <span>Launch Full Interactive View</span>
                     <ArrowRight className="w-3 h-3" />
                   </button>
@@ -400,10 +467,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <span>FOUR CORE PILLARS</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white font-display">
-            Built for the Complete Engineering Student Life-Cycle
+            Built for Multi-Discipline Academic & Career Mastery
           </h2>
           <p className="text-xs sm:text-sm text-slate-300">
-            From daily 9 AM lectures to cracking tier-1 software engineering interviews.
+            From daily 9 AM lectures to cracking national exams, fellowships, and dream placements.
           </p>
         </div>
 
@@ -417,7 +484,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
                 <h3 className="text-xl font-bold text-white font-display">1. Omni-Skill AI Curriculum Architect</h3>
                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-                  Deconstruct any human discipline into step-by-step masteries. Whether athletic mechanics (Butterfly Stroke, Muscle-up) or distributed engineering (Raft Consensus, Redis Engine), generate actionable day-by-day drills with generative technical diagrams.
+                  Deconstruct any human discipline into step-by-step masteries. Whether athletic kinesthetics (Butterfly Stroke), medical diagnostics (ECG Localization), legal drafting (Writ Petitions), or software engineering (Raft Consensus), generate actionable day-by-day drills with generative visual diagrams.
                 </p>
               </div>
               <div className="pt-2 flex items-center gap-2 text-xs font-mono text-indigo-400 font-bold">
@@ -435,7 +502,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
                 <h3 className="text-xl font-bold text-white font-display">2. Adaptive College Hub & Wellbeing</h3>
                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-                  Eliminate scheduling friction with automatic lecture conflict detection, Kanban coursework tracking with priority countdowns, 3D active recall flashcards, and an intelligent daily workload calculator that protects focus.
+                  Eliminate scheduling friction with automatic timetable conflict detection, Kanban coursework tracking with priority countdowns, 3D active recall flashcards, and an intelligent daily workload calculator that protects cognitive focus.
                 </p>
               </div>
               <div className="pt-2 flex items-center gap-2 text-xs font-mono text-cyan-400 font-bold">
@@ -444,20 +511,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </div>
 
-          {/* Pillar 3: Placement & Career Hub */}
+          {/* Pillar 3: Multi-Discipline Practice Sheets */}
           <div className="bezel-shell group hover:scale-[1.01] transition-transform duration-200">
             <div className="bezel-core p-7 space-y-4 h-full flex flex-col justify-between">
               <div className="space-y-3">
                 <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shadow-inner">
-                  <Code2 className="w-6 h-6" />
+                  <Award className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold text-white font-display">3. 75+ Pattern Placement Engine</h3>
+                <h3 className="text-xl font-bold text-white font-display">3. Multi-Discipline Practice Sheets & Opportunities</h3>
                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-                  Master interview algorithms categorized by core patterns tested at Google, Microsoft, and Atlassian. Synchronize live LeetCode stats, track job applications across interview rounds, build STAR stories, and catalog technical mistakes.
+                  Master discipline-specific problem sheets across UPSC CSE, NEET-PG clinical cases, CA financial accounting, CLAT legal precedents, and 75+ DSA coding patterns. Track government exam forms, residencies, fellowships, and job applications on a unified Kanban pipeline.
                 </p>
               </div>
               <div className="pt-2 flex items-center gap-2 text-xs font-mono text-purple-400 font-bold">
-                <span>LeetCode Sync • STAR Stories • Interview Pipelines</span>
+                <span>Data-Driven Sheets • Opportunities Kanban • STAR Portfolio</span>
               </div>
             </div>
           </div>
@@ -471,7 +538,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
                 <h3 className="text-xl font-bold text-white font-display">4. Gamified Flow & Retro 8-Bit Engine</h3>
                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-                  Maintain daily momentum with active streak multipliers, instant XP rewards for completed drills, customizable sound effect synthesizer, and a vintage 8-bit CRT scanline aesthetic that transforms studying into an engaging flow state.
+                  Maintain daily momentum with active streak multipliers, instant XP rewards for completed drills, customizable Web Audio sound effect synthesizer, and a vintage 8-bit CRT scanline aesthetic that transforms studying into an engaging flow state.
                 </p>
               </div>
               <div className="pt-2 flex items-center gap-2 text-xs font-mono text-amber-400 font-bold">
@@ -500,9 +567,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="bezel-shell">
             <div className="bezel-core p-6 space-y-3 h-full">
               <div className="text-3xl font-black font-mono text-indigo-400">01</div>
-              <h4 className="text-base font-bold text-white font-display">Set Target Companies & Academics</h4>
+              <h4 className="text-base font-bold text-white font-display">Choose Your Discipline Vertical</h4>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Define your graduation year, college timetable, target tier-1 tech firms, and semester examination dates in under 60 seconds.
+                Select from Engineering, Medical, Law, Commerce, Civil Services, or Humanities to instantly customize your practice sheets and AI persona.
               </p>
             </div>
           </div>
@@ -512,7 +579,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="text-3xl font-black font-mono text-purple-400">02</div>
               <h4 className="text-base font-bold text-white font-display">AI Synthesizes Your Daily Cadence</h4>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Axiom resolves lecture overlaps, prepares 3D flashcards, and sequences high-probability algorithmic patterns into your daily agenda.
+                Axiom resolves timetable overlaps, prepares 3D flashcards, and sequences high-probability problem sheets into your daily agenda.
               </p>
             </div>
           </div>
@@ -522,7 +589,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="text-3xl font-black font-mono text-emerald-400">03</div>
               <h4 className="text-base font-bold text-white font-display">Execute & Accelerate</h4>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Earn XP, track streak multipliers, rehearse with the AI Placement Mentor, and convert dream job applications into offers.
+                Earn XP, track streak multipliers, rehearse with the AI Exam & Career Mentor, and convert target opportunities into offers.
               </p>
             </div>
           </div>
@@ -537,13 +604,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="bezel-core p-8 sm:p-12 text-center space-y-6 relative overflow-hidden bg-gradient-to-br from-indigo-950/60 via-slate-950 to-purple-950/50">
             <div className="eyebrow-badge">
               <Zap className="w-3.5 h-3.5 text-indigo-400" />
-              <span>READY TO ELEVATE YOUR CAREER?</span>
+              <span>READY TO ELEVATE YOUR LEARNING?</span>
             </div>
             <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight font-display max-w-2xl mx-auto">
-              Master Your Engineering Journey with Axiom
+              Master Any Discipline with Axiom
             </h2>
             <p className="text-xs sm:text-base text-slate-300 max-w-xl mx-auto leading-relaxed">
-              Join students accelerating their academic and software placement readiness.
+              Join students across engineering, healthcare, law, finance, and civil services accelerating their mastery.
             </p>
             <div className="pt-2">
               <button
@@ -575,12 +642,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="flex items-center flex-wrap gap-6 text-xs text-slate-400 font-medium">
             <button onClick={handleLaunch} className="hover:text-indigo-300 transition-colors">Command Center</button>
             <button onClick={handleLaunch} className="hover:text-indigo-300 transition-colors">Omni-Skill</button>
-            <button onClick={handleLaunch} className="hover:text-indigo-300 transition-colors">75+ DSA Sheet</button>
+            <button onClick={handleLaunch} className="hover:text-indigo-300 transition-colors">Skill Practice Sheets</button>
             <button onClick={handleLaunch} className="hover:text-indigo-300 transition-colors">College Hub</button>
           </div>
 
           <div className="text-[11px] text-slate-500 font-mono">
-            Powered by Google Gemini 2.5 • React 19 • Vite
+            SWAYAM-Inspired Architecture • Google Gemini 2.5 • React 19 • Vite
           </div>
         </div>
       </footer>

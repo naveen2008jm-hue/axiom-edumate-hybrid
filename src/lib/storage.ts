@@ -25,16 +25,25 @@ import {
   SelfReportedStress,
   EnergyLevel,
   ThemeMode,
+  Track,
 } from '../types';
 import { DSA_SYLLABUS } from '../data/dsaSyllabus';
 import { APTITUDE_TOPICS } from '../data/aptitudeTopics';
-import { CORE_SUBJECTS } from '../data/coreSubjects';
+import {
+  CORE_SUBJECTS,
+  TRACK_CORE_SUBJECTS,
+  getCoreSubjectsForTrack,
+  TRACK_EXAM_PLANNERS,
+  getExamPlannersForTrack,
+} from '../data/coreSubjects';
 import { LINKEDIN_TASKS } from '../data/linkedinTasks';
 import { QUOTES } from '../data/quotes';
 import { INITIAL_TIMETABLE_EVENTS } from '../data/timetableData';
 import { INITIAL_ASSIGNMENTS } from '../data/assignmentsData';
 import { INITIAL_FLASHCARD_DECKS } from '../data/flashcardsData';
 import { assessWorkload } from './wellbeingEngine';
+import { synthesizeEnvironmentForTrack } from './environmentSynthesizer';
+import { updateAuthUserTrack } from './auth';
 import { soundFx } from './sound';
 import confetti from 'canvas-confetti';
 
@@ -44,7 +53,9 @@ const STORAGE_KEYS = {
   APTITUDE: 'axiom_hybrid_aptitude',
   CGPA: 'axiom_hybrid_cgpa',
   EXAMS: 'axiom_hybrid_exams',
+  EXAMS_BY_TRACK: 'axiom_hybrid_exams_by_track',
   CORE_SUBJECTS: 'axiom_hybrid_core_subjects',
+  CORE_SUBJECTS_BY_TRACK: 'axiom_hybrid_core_subjects_by_track',
   INTERNSHIPS: 'axiom_hybrid_internships',
   PROJECTS: 'axiom_hybrid_projects',
   MISTAKES: 'axiom_hybrid_mistakes',
@@ -480,8 +491,34 @@ export function useAppData() {
   const [dsaList, setDsaListState] = useState<DsaTopic[]>(() => readStorage(STORAGE_KEYS.DSA, DSA_SYLLABUS));
   const [aptitudeList, setAptitudeListState] = useState<AptitudeTopic[]>(() => readStorage(STORAGE_KEYS.APTITUDE, APTITUDE_TOPICS));
   const [cgpaRecords, setCgpaRecordsState] = useState<CgpaRecord[]>(() => readStorage(STORAGE_KEYS.CGPA, INITIAL_CGPA_RECORDS));
-  const [examPlanners, setExamPlannersState] = useState<ExamPlanner[]>(() => readStorage(STORAGE_KEYS.EXAMS, INITIAL_EXAM_PLANNERS));
-  const [coreSubjects, setCoreSubjectsState] = useState<CoreSubject[]>(() => readStorage(STORAGE_KEYS.CORE_SUBJECTS, CORE_SUBJECTS));
+  
+  const [coreSubjectsByTrack, setCoreSubjectsByTrackState] = useState<Record<string, CoreSubject[]>>(() => {
+    const saved = readStorage<Record<string, CoreSubject[]> | null>(STORAGE_KEYS.CORE_SUBJECTS_BY_TRACK, null);
+    if (saved && typeof saved === 'object') {
+      return { ...TRACK_CORE_SUBJECTS, ...saved };
+    }
+    const legacy = readStorage<CoreSubject[] | null>(STORAGE_KEYS.CORE_SUBJECTS, null);
+    if (legacy && Array.isArray(legacy) && legacy.length > 0) {
+      return { ...TRACK_CORE_SUBJECTS, engineering: legacy };
+    }
+    return TRACK_CORE_SUBJECTS;
+  });
+
+  const [examPlannersByTrack, setExamPlannersByTrackState] = useState<Record<string, ExamPlanner[]>>(() => {
+    const saved = readStorage<Record<string, ExamPlanner[]> | null>(STORAGE_KEYS.EXAMS_BY_TRACK, null);
+    if (saved && typeof saved === 'object') {
+      return { ...TRACK_EXAM_PLANNERS, ...saved };
+    }
+    const legacy = readStorage<ExamPlanner[] | null>(STORAGE_KEYS.EXAMS, null);
+    if (legacy && Array.isArray(legacy) && legacy.length > 0) {
+      return { ...TRACK_EXAM_PLANNERS, engineering: legacy };
+    }
+    return TRACK_EXAM_PLANNERS;
+  });
+
+  const currentTrack = profile.track || 'engineering';
+  const coreSubjects = coreSubjectsByTrack[currentTrack] || getCoreSubjectsForTrack(currentTrack);
+  const examPlanners = examPlannersByTrack[currentTrack] || getExamPlannersForTrack(currentTrack);
   const [internships, setInternshipsState] = useState<Internship[]>(() => readStorage(STORAGE_KEYS.INTERNSHIPS, INITIAL_INTERNSHIPS));
   const [projects, setProjectsState] = useState<Project[]>(() => readStorage(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS));
   const [mistakesLog, setMistakesLogState] = useState<MistakeLog[]>(() => readStorage(STORAGE_KEYS.MISTAKES, INITIAL_MISTAKES_LOG));
@@ -566,6 +603,53 @@ export function useAppData() {
     setProfileState((prev) => {
       const next = { ...prev, ...updates };
       localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(next));
+      if (next.id && updates.track) {
+        updateAuthUserTrack(next.id, updates.track);
+      }
+      return next;
+    });
+  };
+
+  const loadUserProfile = (user: Partial<UserProfile>) => {
+    setProfileState((prev) => {
+      const next = { ...prev, ...user };
+      localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const applyDisciplineSynthesis = (track: Track, newProfileUpdates?: Partial<UserProfile>) => {
+    const combinedBase = { ...profile, ...(newProfileUpdates || {}), track };
+    const synthesized = synthesizeEnvironmentForTrack(track, combinedBase);
+
+    const nextProfile: UserProfile = {
+      ...combinedBase,
+      ...synthesized.profileUpdates,
+    };
+
+    setProfileState(nextProfile);
+    localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(nextProfile));
+
+    if (nextProfile.id) {
+      updateAuthUserTrack(nextProfile.id, track);
+    }
+
+    // Calibrate assignments
+    setAssignmentsState(synthesized.assignments);
+    localStorage.setItem(STORAGE_KEYS.ASSIGNMENTS, JSON.stringify(synthesized.assignments));
+
+    // Calibrate flashcards
+    setFlashcardDecksState(synthesized.flashcardDecks);
+    localStorage.setItem(STORAGE_KEYS.FLASHCARDS, JSON.stringify(synthesized.flashcardDecks));
+
+    // Calibrate daily agenda
+    setDailyAgendaState(synthesized.dailyAgenda);
+    localStorage.setItem(STORAGE_KEYS.DAILY_AGENDA, JSON.stringify(synthesized.dailyAgenda));
+
+    // Calibrate exam planners for track
+    setExamPlannersByTrackState((prev) => {
+      const next = { ...prev, [track]: synthesized.examPlanners };
+      localStorage.setItem(STORAGE_KEYS.EXAMS_BY_TRACK, JSON.stringify(next));
       return next;
     });
   };
@@ -640,17 +724,20 @@ export function useAppData() {
 
   const addExamPlanner = (exam: Omit<ExamPlanner, 'id'>) => {
     const newExam: ExamPlanner = { ...exam, id: `ex-${Date.now()}` };
-    setExamPlannersState((prev) => {
-      const next = [...prev, newExam].sort((a, b) => new Date(a.examDate).getTime() - new Date(b.examDate).getTime());
-      localStorage.setItem(STORAGE_KEYS.EXAMS, JSON.stringify(next));
+    setExamPlannersByTrackState((prev) => {
+      const trackList = prev[currentTrack] || getExamPlannersForTrack(currentTrack);
+      const nextList = [...trackList, newExam].sort((a, b) => new Date(a.examDate).getTime() - new Date(b.examDate).getTime());
+      const next = { ...prev, [currentTrack]: nextList };
+      localStorage.setItem(STORAGE_KEYS.EXAMS_BY_TRACK, JSON.stringify(next));
       return next;
     });
     soundFx.playClick();
   };
 
   const toggleRevisionItem = (examId: string, dayIndex: number) => {
-    setExamPlannersState((prev) => {
-      const next = prev.map((exam) => {
+    setExamPlannersByTrackState((prev) => {
+      const trackList = prev[currentTrack] || getExamPlannersForTrack(currentTrack);
+      const nextList = trackList.map((exam) => {
         if (exam.id !== examId) return exam;
         const newPlan = exam.revisionPlan.map((step, idx) => {
           if (idx === dayIndex) {
@@ -661,22 +748,26 @@ export function useAppData() {
         });
         return { ...exam, revisionPlan: newPlan };
       });
-      localStorage.setItem(STORAGE_KEYS.EXAMS, JSON.stringify(next));
+      const next = { ...prev, [currentTrack]: nextList };
+      localStorage.setItem(STORAGE_KEYS.EXAMS_BY_TRACK, JSON.stringify(next));
       return next;
     });
   };
 
   const updateCoreSubject = (id: string, updates: Partial<CoreSubject>) => {
-    setCoreSubjectsState((prev) => {
-      const next = prev.map((sub) => (sub.id === id ? { ...sub, ...updates } : sub));
-      localStorage.setItem(STORAGE_KEYS.CORE_SUBJECTS, JSON.stringify(next));
+    setCoreSubjectsByTrackState((prev) => {
+      const trackList = prev[currentTrack] || getCoreSubjectsForTrack(currentTrack);
+      const nextList = trackList.map((sub) => (sub.id === id ? { ...sub, ...updates } : sub));
+      const next = { ...prev, [currentTrack]: nextList };
+      localStorage.setItem(STORAGE_KEYS.CORE_SUBJECTS_BY_TRACK, JSON.stringify(next));
       return next;
     });
   };
 
   const toggleCoreTopic = (subjectId: string, topicIndex: number) => {
-    setCoreSubjectsState((prev) => {
-      const next = prev.map((sub) => {
+    setCoreSubjectsByTrackState((prev) => {
+      const trackList = prev[currentTrack] || getCoreSubjectsForTrack(currentTrack);
+      const nextList = trackList.map((sub) => {
         if (sub.id !== subjectId) return sub;
         const updatedTopics = sub.keyTopics.map((t, idx) => {
           if (idx === topicIndex) {
@@ -687,7 +778,8 @@ export function useAppData() {
         });
         return { ...sub, keyTopics: updatedTopics };
       });
-      localStorage.setItem(STORAGE_KEYS.CORE_SUBJECTS, JSON.stringify(next));
+      const next = { ...prev, [currentTrack]: nextList };
+      localStorage.setItem(STORAGE_KEYS.CORE_SUBJECTS_BY_TRACK, JSON.stringify(next));
       return next;
     });
   };
@@ -1251,8 +1343,8 @@ export function useAppData() {
     setDsaListState(DSA_SYLLABUS);
     setAptitudeListState(APTITUDE_TOPICS);
     setCgpaRecordsState(INITIAL_CGPA_RECORDS);
-    setExamPlannersState(INITIAL_EXAM_PLANNERS);
-    setCoreSubjectsState(CORE_SUBJECTS);
+    setExamPlannersByTrackState(TRACK_EXAM_PLANNERS);
+    setCoreSubjectsByTrackState(TRACK_CORE_SUBJECTS);
     setInternshipsState(INITIAL_INTERNSHIPS);
     setProjectsState(INITIAL_PROJECTS);
     setMistakesLogState(INITIAL_MISTAKES_LOG);
@@ -1274,7 +1366,9 @@ export function useAppData() {
     localStorage.setItem(STORAGE_KEYS.APTITUDE, JSON.stringify(APTITUDE_TOPICS));
     localStorage.setItem(STORAGE_KEYS.CGPA, JSON.stringify(INITIAL_CGPA_RECORDS));
     localStorage.setItem(STORAGE_KEYS.EXAMS, JSON.stringify(INITIAL_EXAM_PLANNERS));
+    localStorage.setItem(STORAGE_KEYS.EXAMS_BY_TRACK, JSON.stringify(TRACK_EXAM_PLANNERS));
     localStorage.setItem(STORAGE_KEYS.CORE_SUBJECTS, JSON.stringify(CORE_SUBJECTS));
+    localStorage.setItem(STORAGE_KEYS.CORE_SUBJECTS_BY_TRACK, JSON.stringify(TRACK_CORE_SUBJECTS));
     localStorage.setItem(STORAGE_KEYS.INTERNSHIPS, JSON.stringify(INITIAL_INTERNSHIPS));
     localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(INITIAL_PROJECTS));
     localStorage.setItem(STORAGE_KEYS.MISTAKES, JSON.stringify(INITIAL_MISTAKES_LOG));
@@ -1300,7 +1394,9 @@ export function useAppData() {
       aptitudeList,
       cgpaRecords,
       examPlanners,
+      examPlannersByTrack,
       coreSubjects,
+      coreSubjectsByTrack,
       internships,
       projects,
       mistakesLog,
@@ -1328,6 +1424,8 @@ export function useAppData() {
   return {
     profile,
     updateProfile,
+    loadUserProfile,
+    applyDisciplineSynthesis,
     xpPoints,
     awardXP,
     theme,

@@ -1,0 +1,129 @@
+================================================================================
+AXIOM EDUMATE HYBRID - COMPREHENSIVE PROJECT DOCUMENTATION
+Universal AI Omni-Learning, Adaptive College Hub & Placement Operating System
+Version: 1.0.0 | Repository: d:/SIH/axiom_edumate_hybrid
+================================================================================
+
+TABLE OF CONTENTS:
+1. Executive Summary & Project Scope
+2. Problem Statement & Core Objectives
+3. System Architecture & Workflow
+4. Core Modules & Detailed Features
+   - 4.1 Command Center & Gamification Pulse
+   - 4.2 Omni-Skill AI Curriculum Architect
+   - 4.3 EduMate Adaptive College Hub
+   - 4.4 Engineering Placement & Career Suite
+   - 4.5 Academics, Aptitude & Cognitive Practice
+   - 4.6 Productivity, Pomodoro & Badges Vault
+5. Technical Specifications & Tech Stack
+6. API Endpoints & Gemini AI Integrations
+7. Database Schema (Supabase SQL)
+8. Design System & Audio Engine
+9. Installation, Setup & Deployment Guide
+10. Challenges, Risks & Solutions
+11. Synchronized 13-Step Demo Tour
+
+================================================================================
+1. EXECUTIVE SUMMARY & PROJECT SCOPE
+================================================================================
+Axiom EduMate Hybrid is a unified learning and career operating system built 
+specifically for engineering and technology students. It seamlessly bridges the 
+gap between college academics, technical interview prep (DSA & STAR portfolio), 
+autonomous AI curriculum generation, and cognitive wellbeing.
+
+Key Scope:
+- Academic Harmony: Timetable conflict detection and coursework tracking.
+- Algorithmic Mastery: 75+ DSA pattern matrix with revision schedules.
+- Generative AI Learning: Google Gemini 2.5 prompt-to-curriculum and schematics.
+- Burnout Protection: 0-100 algorithmic Wellbeing & Workload index.
+
+================================================================================
+2. PROBLEM STATEMENT & CORE OBJECTIVES
+================================================================================
+The Problem:
+Students struggle with fragmented workflows across university portals, LeetCode, 
+YouTube, and separate spreadsheets. This causes cognitive overload, missed 
+deadlines, and high burnout rates.
+
+Core Objectives:
+- Single Pane of Glass: Synchronize academics, DSA, and career prep.
+- Autonomous Skill Deconstruction: Instant structured curricula on any topic.
+- Clash-Free Scheduling: Real-time conflict detection for lecture schedules.
+- Sustainable Gamification: XP streaks, badge unlocks, 8-bit retro audio.
+
+================================================================================
+3. SYSTEM ARCHITECTURE
+================================================================================
+- Frontend: React 19, TypeScript, TailwindCSS v4, Motion, Retro Double-Bezel CSS
+- Backend Server: Express 4 + tsx running on Node.js (Port 3000)
+- AI Engine: Google Gemini 2.5 API (@google/genai)
+- Database: Supabase / PostgreSQL with Row-Level Security
+- Audio: Web Audio API procedural 8-bit sound synthesis
+
+================================================================================
+4. CORE MODULES & FEATURES
+================================================================================
+- Command Center: Live CGPA, LeetCode sync, GitHub stats, active streak tracker.
+- Omni-Skill Architect: Converts any topic into day-by-day drills with schematics.
+- Timetable & Clash Detector: Overlap detection, lock protection, free slots.
+- Coursework Kanban: Priority urgency tags (URGENT, HIGH, MEDIUM, LOW) & countdowns.
+- 3D Flashcards: Active recall flip cards with spaced repetition and AI generator.
+- Wellbeing Engine: 0-100 load index adjusting Pomodoro intervals.
+- My Day AI Agenda: Single chronological timeline combining lectures & tasks.
+- 75+ Core DSA Patterns: Algorithmic sheets with live LeetCode synchronization.
+- AI Mock Interview: Real-time technical interview evaluation and feedback.
+- STAR Portfolio & Job Pipeline: Application Kanban from Wishlist to Offer.
+- Productivity Suite: Custom Pomodoro timers, soundscapes, 20+ achievement badges.
+
+================================================================================
+5. TECHNICAL SPECIFICATIONS & DEPENDENCIES
+================================================================================
+- Framework: React 19.0.1
+- Language: TypeScript 5.8.2
+- Bundler: Vite 6.2.3 & esbuild 0.25.0
+- Styling: TailwindCSS 4.1.14
+- Animation: Motion 12.23.24
+- AI SDK: @google/genai 2.4.0
+- Database SDK: @supabase/supabase-js 2.112.3
+- Charts & Visuals: Recharts 3.10.1, Canvas Confetti 1.9.4, Lucide React 0.546.0
+
+================================================================================
+6. API ENDPOINTS (server.ts)
+================================================================================
+- POST /api/ai/omni-skill       -> Day-by-day learning curriculum synthesis
+- POST /api/ai/flashcards       -> Generates structured flashcard decks
+- POST /api/ai/doubt-solve      -> Contextual problem solver with code output
+- POST /api/ai/concept-map      -> Hierarchical visual concept tree graphs
+- POST /api/ai/mock-interview   -> Technical interview evaluation & scoring
+- GET  /api/stats/leetcode/:user -> Live LeetCode solved counts & ranking proxy
+- GET  /api/stats/github/:user   -> Public GitHub repository and commit stats
+
+================================================================================
+7. DATABASE SCHEMA SUMMARY (Supabase SQL)
+================================================================================
+- profiles: (id, username, xp, streak_count, workload_index, created_at)
+- timetable_slots: (id, user_id, day_of_week, start_time, end_time, subject, room)
+- assignments: (id, user_id, title, subject, due_date, priority, status)
+- job_applications: (id, user_id, company, role, stage, applied_date, notes)
+
+================================================================================
+8. INSTALLATION & SETUP INSTRUCTIONS
+================================================================================
+1. Navigate to directory:
+   cd d:\SIH\axiom_edumate_hybrid
+
+2. Configure environment (.env):
+   GEMINI_API_KEY=your_gemini_api_key_here
+   PORT=3000
+
+3. Run development mode:
+   npm run dev
+   (Open http://localhost:3000 in your browser)
+
+4. Production build:
+   npm run build
+   npm start
+
+5. Demo Tour:
+   Navigate to http://localhost:3000/#demo or click "🎬 Demo Tour" in the top bar.
+================================================================================

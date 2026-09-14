@@ -19,21 +19,26 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from 'recharts';
+
+import { WeeklyRecapCard } from './WeeklyRecapCard';
+import { BadgesVault } from './BadgesVault';
+import { UserStatsForBadges } from '../../lib/badgeEngine';
 
 interface ProductivityDashboardProps {
   studySessions: StudySession[];
   onAddSession: (s: Omit<StudySession, 'id'>) => void;
+  userStats?: UserStatsForBadges;
+  xp?: number;
+  streak?: number;
 }
-
-const COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#06b6d4', '#8b5cf6'];
 
 export const ProductivityDashboard: React.FC<ProductivityDashboardProps> = ({
   studySessions,
   onAddSession,
+  userStats,
+  xp,
+  streak,
 }) => {
   // Pomodoro timer state
   const [minutes, setMinutes] = useState(25);
@@ -199,7 +204,7 @@ export const ProductivityDashboard: React.FC<ProductivityDashboardProps> = ({
               </div>
             </div>
 
-            {/* Action Buttons with Button-in-Button */}
+            {/* Action Buttons */}
             <div className="flex items-center gap-3">
               <button
                 onClick={toggleTimer}
@@ -275,6 +280,43 @@ export const ProductivityDashboard: React.FC<ProductivityDashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Part 5: Shareable Weekly Progress Recap Card */}
+      <WeeklyRecapCard
+        stats={{
+          xp: xp ?? userStats?.xp ?? 1450,
+          streak: streak ?? userStats?.streak ?? 7,
+          tasksCompleted: userStats?.tasksCompleted ?? 24,
+          focusHours: Number(totalHours) > 0 ? Number(totalHours) : 8.5,
+          topSubject: Object.keys(categoryMap)[0] || 'Core Domain',
+        }}
+      />
+
+      {/* Part 5: Tiered Achievement Badges Vault */}
+      <BadgesVault
+        stats={
+          userStats || {
+            streakCount: streak ?? 7,
+            streak: streak ?? 7,
+            xpPoints: xp ?? 1450,
+            xp: xp ?? 1450,
+            totalFocusHours: Number(totalHours) > 0 ? Number(totalHours) : 8.5,
+            tasksCompleted: 24,
+            dsaSolvedCount: 16,
+            omniCoursesCount: 2,
+            voiceReviewsCount: 4,
+            hasUsedVoiceRevision: true,
+            mockInterviewsCount: 2,
+            mockInterviewsCompleted: 2,
+            sleepLogsCount: 4,
+            buddyPingsCount: 3,
+            buddyPingsSent: 3,
+            communityPostsCount: 2,
+            forumPostsCreated: 2,
+            clearedBacklogsCount: 1,
+          }
+        }
+      />
     </div>
   );
 };

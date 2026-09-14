@@ -1,5 +1,14 @@
 export type ThemeMode = 'dark' | 'light';
 
+export type Track =
+  | 'engineering'
+  | 'medical'
+  | 'law'
+  | 'commerce'
+  | 'humanities'
+  | 'competitive_exams'
+  | 'other';
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -7,6 +16,7 @@ export interface UserProfile {
   avatarUrl?: string;
   college: string;
   branch: string;
+  track?: Track;
   graduationYear: number;
   githubUsername: string;
   leetcodeUsername: string;
@@ -92,7 +102,7 @@ export interface ExamPlanner {
 export interface CoreSubject {
   id: string;
   subjectName: string;
-  category: 'Core CS' | 'Systems' | 'Software Engineering';
+  category: string;
   confidenceLevel: number; // 1 to 5
   status: 'Not Started' | 'Learning' | 'Confident' | 'Mastered';
   keyTopics: {
@@ -103,10 +113,19 @@ export interface CoreSubject {
   frequentlyAskedQuestions?: string[];
 }
 
+export type OpportunityType =
+  | 'Job'
+  | 'Internship'
+  | 'Government Exam Form'
+  | 'Entrance Exam'
+  | 'Scholarship'
+  | 'Fellowship';
+
 export interface Internship {
   id: string;
-  companyName: string;
-  roleTitle: string;
+  companyName: string; // Or Organization / Exam Board Name
+  roleTitle: string; // Or Designation / Post / Exam Name
+  opportunityType?: OpportunityType;
   location?: string;
   stipendOrCtc?: string;
   applicationDate?: string;
@@ -134,12 +153,23 @@ export interface Internship {
   jobLink?: string;
 }
 
+export type Opportunity = Internship;
+
+export type PortfolioCategory =
+  | 'Tech Project'
+  | 'Research Paper'
+  | 'Case Competition'
+  | 'Clinical / Legal Audit'
+  | 'Open Source / Community'
+  | 'Creative Work';
+
 export interface Project {
   id: string;
   title: string;
+  category?: PortfolioCategory;
   shortDescription?: string;
   description?: string;
-  techStack: string[];
+  techStack: string[]; // Or Key Tools / Methodologies / Statutes / Clinical Systems
   githubRepoUrl?: string;
   githubUrl?: string;
   liveDemoUrl?: string;
@@ -148,7 +178,36 @@ export interface Project {
   starBulletPoints?: string[];
   starsCount?: number;
   lastUpdated?: string;
-  status?: 'In Progress' | 'Completed' | 'Deployed';
+  status?: 'In Progress' | 'Completed' | 'Deployed' | 'Published';
+}
+
+export type ExperienceProject = Project;
+
+// Multi-Discipline Practice Sheet Types
+export interface PracticeSheetTopic {
+  id: string;
+  category: string;
+  title: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  keyPattern?: string; // Or Key Invariant, Case Ratio, Landmark Section, Formula
+  externalUrl?: string;
+  referenceCode?: string;
+  completed: boolean;
+  completedAt?: string;
+  notes?: string;
+}
+
+export interface PracticeSheetConfig {
+  track: Track;
+  sheetTitle: string;
+  sheetSubtitle: string;
+  categoryTitle: string;
+  actionLabel: string; // 'Solve' | 'Practice' | 'Study Case' | 'Draft'
+  categories: string[];
+  statProxyName?: string;
+  statProxyDescription?: string;
+  externalPlatformName?: string;
+  defaultTopics: PracticeSheetTopic[];
 }
 
 export interface MistakeLog {
@@ -306,8 +365,10 @@ export interface Flashcard {
   back: string;
   subtopic?: string;
   difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
-  mastery: 'NEW' | 'LEARNING' | 'MASTERED';
+  mastery?: 'NEW' | 'LEARNING' | 'MASTERED';
   reviewCount?: number;
+  masteryScore?: number;
+  lastReviewed?: string;
 }
 
 export interface FlashcardDeck {
@@ -316,6 +377,8 @@ export interface FlashcardDeck {
   subject: string;
   color?: string;
   cards: Flashcard[];
+  track?: Track;
+  createdAt?: string;
 }
 
 export type SelfReportedStress = 'GREAT' | 'GOOD' | 'OKAY' | 'STRESSED' | 'VERY_STRESSED';
@@ -348,12 +411,14 @@ export interface DailyScheduleSlot {
   id: string;
   timeSlot: string; // e.g. "09:00 - 10:30"
   title: string;
-  type: 'CLASS' | 'ASSIGNMENT' | 'DSA' | 'ROADMAP' | 'POMODORO' | 'BREAK';
+  type: 'CLASS' | 'ASSIGNMENT' | 'DSA' | 'ROADMAP' | 'POMODORO' | 'BREAK' | 'EXAM';
   durationMinutes: number;
   isLocked?: boolean;
   completed: boolean;
   priority?: 'HIGH' | 'MEDIUM' | 'LOW';
 }
+
+export type AgendaSlot = DailyScheduleSlot;
 
 export type TabType =
   | 'overview'
@@ -368,9 +433,272 @@ export type TabType =
   | 'productivity'
   | 'ai-mentor'
   | 'ai-planner'
+  | 'concept-map'
+  | 'doubt-solver'
+  | 'mock-interview'
+  | 'alumni'
+  | 'group-projects'
   | 'linkedin'
   | 'my-day'
   | 'timetable'
   | 'assignments'
   | 'flashcards'
   | 'wellbeing';
+
+// 1. Concept Map Types
+export interface ConceptNode {
+  id: string;
+  title: string;
+  description: string;
+  category?: string;
+  keyConcepts?: string[];
+  children?: ConceptNode[];
+  isExpanded?: boolean;
+}
+
+export interface ConceptMapData {
+  topic: string;
+  track: Track;
+  summary: string;
+  root: ConceptNode;
+}
+
+// 2. Doubt Solver Types
+export interface DoubtSolution {
+  id: string;
+  question: string;
+  track: Track;
+  subject?: string;
+  imageUrl?: string;
+  conceptIdentified: string;
+  keyRulesOrFormulas: string[];
+  steps: {
+    stepNumber: number;
+    title: string;
+    explanation: string;
+  }[];
+  commonTraps: string[];
+  finalAnswer: string;
+  createdAt: string;
+}
+
+// 3. Mock Interview Types
+export interface InterviewQuestion {
+  id: string;
+  track: Track;
+  category: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  question: string;
+  hints: string[];
+  keyPointsToCover: string[];
+  timeLimitSeconds: number;
+}
+
+export interface InterviewCritique {
+  score: number; // 0 to 100
+  overallImpression: string;
+  pacingPpm: string; // e.g. "135 wpm (Optimal)"
+  fillerWordFrequency: 'Low' | 'Moderate' | 'High';
+  fillerWordsDetected: string[];
+  strengths: string[];
+  areasForImprovement: string[];
+  starStructureRating: 'Exemplary' | 'Good' | 'Needs Structuring';
+  idealAnswerOutline: string;
+}
+
+export interface MockInterviewSession {
+  id: string;
+  questionId: string;
+  questionText: string;
+  track: Track;
+  date: string;
+  durationSeconds: number;
+  videoBlobUrl?: string; // in-session only
+  critique?: InterviewCritique;
+  userSelfChecklist?: {
+    coveredSTAR: boolean;
+    clearTone: boolean;
+    statedComplexityOrRatio: boolean;
+    confidentPacing: boolean;
+  };
+}
+
+// 4. Alumni Directory Types
+export interface AlumnusProfile {
+  id: string;
+  name: string;
+  avatarUrl: string;
+  track: Track;
+  graduationYear: number;
+  college: string;
+  currentRole: string;
+  currentOrganization: string; // Company / Hospital / Court / Ministry
+  location: string;
+  targetExamOrDomain: string;
+  linkedinUrl?: string;
+  email: string;
+  availableForMentorship: boolean;
+  adviceHeadline: string;
+  topicsWillingToHelp: string[];
+}
+
+// 5. Group Project Coordinator Types
+export interface GroupProjectMember {
+  id: string;
+  name: string;
+  role: string;
+  avatarUrl: string;
+  isSelf?: boolean;
+}
+
+export interface GroupProjectTask {
+  id: string;
+  title: string;
+  description?: string;
+  stage: 'BACKLOG' | 'IN_PROGRESS' | 'REVIEW' | 'DONE';
+  assignedMemberIds: string[];
+  deadlineDate: string; // YYYY-MM-DD
+  priority: 'URGENT' | 'HIGH' | 'MEDIUM' | 'LOW';
+  estimatedHours: number;
+  clashAlert?: string;
+}
+
+export interface GroupProject {
+  id: string;
+  title: string;
+  courseOrSubject: string;
+  track: Track;
+  repositoryUrl?: string;
+  deadlineDate: string;
+  members: GroupProjectMember[];
+  tasks: GroupProjectTask[];
+}
+
+// 6. Backlog & Arrears Tracker Types
+export interface BacklogItem {
+  id: string;
+  subjectCode: string;
+  subjectName: string;
+  track: Track;
+  originalSemester: number;
+  credits: number;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  status: 'Pending' | 'Registered' | 'Cleared';
+  targetExamDate?: string;
+  attemptCount: number;
+  priority: 'CRITICAL' | 'HIGH' | 'MODERATE';
+  notes?: string;
+}
+
+// 7. Sleep Debt Tracker Types
+export interface SleepLogEntry {
+  id: string;
+  date: string; // YYYY-MM-DD
+  hoursSlept: number;
+  quality: 'EXCELLENT' | 'RESTED' | 'TIRED' | 'EXHAUSTED';
+  targetHours: number; // default 8
+}
+
+// 8. Study Buddy Types
+export interface StudyBuddyConfig {
+  buddyName: string;
+  buddyContact: string; // email or handle
+  dailyPingTime: string; // e.g. "18:00"
+  studyPactGoal: string;
+  lastPingDate?: string;
+  totalPingsSent: number;
+}
+
+// 9. Achievement Badges Types
+export type BadgeTier = 'BRONZE' | 'SILVER' | 'GOLD' | 'DIAMOND';
+
+export interface BadgeDefinition {
+  id: string;
+  title: string;
+  description: string;
+  category: 'STREAK' | 'MASTERY' | 'AI_LEARNING' | 'WELLBEING' | 'COMMUNITY' | 'CAREER';
+  tier: BadgeTier;
+  iconName: string;
+  xpReward: number;
+  checkUnlocked: (data: any) => boolean;
+}
+
+// 10. Community & Social Module Types
+export interface DiscussionReply {
+  id: string;
+  threadId?: string;
+  authorName?: string;
+  authorAvatar: string;
+  authorTrack?: Track;
+  content: string;
+  createdAt: string;
+  upvotes: number;
+  hasUpvoted?: boolean;
+  author?: string;
+}
+
+export interface DiscussionThread {
+  id: string;
+  track: Track;
+  title: string;
+  content: string;
+  authorName?: string;
+  authorAvatar: string;
+  categoryTag?: string; // e.g. "Ind AS 115", "Prelims Strategy", "System Design"
+  createdAt: string;
+  repliesCount: number;
+  upvotes: number;
+  hasUpvoted?: boolean;
+  replies: DiscussionReply[];
+  tags?: string[];
+  author?: string;
+}
+
+export interface SharedResource {
+  id: string;
+  track: Track;
+  subjectName?: string;
+  title: string;
+  description: string;
+  fileType?: 'PDF' | 'DOC' | 'ZIP' | 'SHEET' | 'CODE' | string;
+  fileSize: string;
+  uploadedBy?: string;
+  uploadedAt: string;
+  downloadCount?: number;
+  rating?: number; // 1 to 5
+  tags: string[];
+  previewContent?: string;
+  fileFormat?: string;
+  downloads?: number;
+  author?: string;
+}
+
+export interface StudyRoomParticipant {
+  id: string;
+  name: string;
+  avatar: string;
+  track: Track;
+  currentTask: string;
+  isFocused: boolean;
+  focusMinutesToday: number;
+}
+
+export interface StudyRoom {
+  id: string;
+  roomCode?: string;
+  roomName?: string;
+  track: Track;
+  timerMode?: 'POMODORO' | 'SHORT_BREAK' | 'LONG_BREAK';
+  remainingSeconds?: number;
+  isRunning?: boolean;
+  isLive?: boolean;
+  participants?: StudyRoomParticipant[];
+  name?: string;
+  topic?: string;
+  timerRemainingMinutes?: number;
+  participantsCount?: number;
+  maxParticipants?: number;
+  avatars?: string[];
+  hostName?: string;
+  pomodoroMinutes?: number;
+}
