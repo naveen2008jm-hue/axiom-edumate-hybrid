@@ -23,6 +23,7 @@ import { useTrack } from '../../context/TrackContext';
 import { getInterviewQuestionsForTrack } from '../../data/interviewQuestions';
 import { soundFx } from '../../lib/sound';
 import { toast } from '../../lib/toast';
+import { critiqueMockInterview } from '../../services/aiService';
 
 interface MockInterviewRecorderProps {
   onAwardXP?: (amount: number) => void;
@@ -178,18 +179,13 @@ export const MockInterviewRecorder: React.FC<MockInterviewRecorderProps> = ({
     soundFx.playClick();
 
     try {
-      const res = await fetch('/api/gemini/interview-critique', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          question: selectedQuestion.question,
-          track,
-          durationSeconds: recordedDuration || timerSeconds || 75,
-          answerNotes: answerNotes || 'Candidate completed spoken walkthrough covering core principles and trade-offs.',
-        }),
+      const data = await critiqueMockInterview({
+        question: selectedQuestion.question,
+        track,
+        durationSeconds: recordedDuration || timerSeconds || 75,
+        answerNotes: answerNotes || 'Candidate completed spoken walkthrough covering core principles and trade-offs.',
       });
 
-      const data = await res.json();
       setCritique(data);
       onAwardXP?.(30);
       onInterviewComplete?.();
@@ -198,6 +194,7 @@ export const MockInterviewRecorder: React.FC<MockInterviewRecorderProps> = ({
         description: `Score: ${data.score}/100. +30 XP earned for interview practice!`,
       });
     } catch (err) {
+      console.warn('Critique error:', err);
       toast.error('Critique Error', { description: 'Failed to generate AI interview evaluation.' });
     } finally {
       setCritiqueLoading(false);

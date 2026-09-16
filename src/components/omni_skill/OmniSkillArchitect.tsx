@@ -21,6 +21,7 @@ import { OmniCourse, OmniDayPlan } from '../../types';
 import { getPollinationsImageUrl } from '../../lib/imageGen';
 import { soundFx } from '../../lib/sound';
 import { toast } from '../../lib/toast';
+import { architectOmniCourse } from '../../services/aiService';
 
 interface OmniSkillArchitectProps {
   courses: OmniCourse[];
@@ -62,17 +63,7 @@ export const OmniSkillArchitect: React.FC<OmniSkillArchitectProps> = ({
     setError(null);
 
     const generatePromise = async () => {
-      const res = await fetch('/api/gemini/omni-course', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic }),
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to architect curriculum');
-      }
-
-      const data = await res.json();
+      const data = await architectOmniCourse(topic);
       onAddCourse({
         topicName: topic,
         category: data.category || 'Conceptual',
@@ -88,14 +79,12 @@ export const OmniSkillArchitect: React.FC<OmniSkillArchitectProps> = ({
       return data;
     };
 
-    toast.promise(generatePromise(), {
-      loading: `Synthesizing ${topic} curriculum via Google Gemini...`,
-      success: (data) => `Curriculum ready: ${data.title || topic}!`,
-      error: (err) => err?.message || 'Error generating curriculum.',
-    });
-
     try {
-      await generatePromise;
+      await toast.promise(generatePromise(), {
+        loading: `Synthesizing ${topic} curriculum via Google Gemini...`,
+        success: (data) => `Curriculum ready: ${data.title || topic}!`,
+        error: (err) => err?.message || 'Error generating curriculum.',
+      });
     } catch (err: any) {
       console.error('Curriculum generation failed:', err);
       setError(err.message || 'Error generating course plan.');

@@ -9,4 +9,7 @@ export default defineConfig({
     port: 3000,
     host: '0.0.0.0',
   },
+  define: {
+    'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || 'AIzaSyAfeBvoStt09vcWsnGQgBcq_IgC_Chenqg'),
+  },
 });

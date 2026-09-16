@@ -12,6 +12,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { StudyPlan } from '../../types';
+import { generateStudyPlan } from '../../services/aiService';
 
 interface AiStudyPlannerProps {
   studyPlans: StudyPlan[];
@@ -41,33 +42,12 @@ export const AiStudyPlanner: React.FC<AiStudyPlannerProps> = ({
     setError(null);
 
     try {
-      const res = await fetch('/api/gemini/study-plan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          topic,
-          days,
-          targetLevel: difficulty,
-          hoursPerDay: hours,
-        }),
-      });
-
-      if (!res.ok) throw new Error('Failed to generate study plan');
-      const data = await res.json();
-
-      onAddPlan({
-        topicName: data.topicName || topic,
-        totalDays: Number(data.totalDays) || days,
-        difficulty: data.difficulty || difficulty,
-        estimatedTotalHours: Number(data.estimatedTotalHours) || days * hours,
-        summary: data.summary || `Study roadmap for ${topic}`,
-        days: data.days || [],
-        isActive: true,
-      });
-
+      const plan = await generateStudyPlan(topic, days, difficulty, hours);
+      onAddPlan(plan);
       setTopic('');
     } catch (err: any) {
-      setError(err.message || 'Error generating AI study plan');
+      console.warn('Study plan error:', err);
+      setError(err?.message || 'Error generating AI study plan');
     } finally {
       setLoading(false);
     }

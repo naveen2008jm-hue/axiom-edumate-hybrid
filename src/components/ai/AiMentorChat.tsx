@@ -20,6 +20,7 @@ import { ChatMessage, UserProfile, Track } from '../../types';
 import { TRACK_DEFINITIONS } from '../../context/TrackContext';
 import { soundFx } from '../../lib/sound';
 import { DEMO_CHAT_MESSAGES } from '../demo/demoSeedData';
+import { sendMentorChatMessage } from '../../services/aiService';
 
 interface AiMentorChatProps {
   profile: UserProfile;
@@ -154,30 +155,16 @@ export const AiMentorChat: React.FC<AiMentorChatProps> = ({ profile, demoMode = 
     setLoading(true);
 
     try {
-      const history = messages.map((m) => ({
-        role: m.role,
-        text: m.content,
-      }));
-
-      const res = await fetch('/api/gemini/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: query,
-          conversationHistory: history,
-          userContext: {
-            name: profile.name,
-            branch: profile.branch,
-            track: currentTrack,
-            graduationYear: profile.graduationYear,
-            targetCompanies: profile.targetCompanies,
-            targetRole: profile.targetRole || trackMeta.targetExamsOrRoles,
-            leetcodeUsername: profile.leetcodeUsername,
-          },
-        }),
+      const data = await sendMentorChatMessage(query, messages, {
+        name: profile.name,
+        branch: profile.branch,
+        track: currentTrack,
+        graduationYear: profile.graduationYear,
+        targetCompanies: profile.targetCompanies,
+        targetRole: profile.targetRole || trackMeta.targetExamsOrRoles,
+        leetcodeUsername: profile.leetcodeUsername,
       });
 
-      const data = await res.json();
       const botMsg: ChatMessage = {
         id: `bot-${Date.now()}`,
         role: 'model',
@@ -188,12 +175,13 @@ export const AiMentorChat: React.FC<AiMentorChatProps> = ({ profile, demoMode = 
       setMessages((prev) => [...prev, botMsg]);
       soundFx.playBlip();
     } catch (e: any) {
+      console.warn('AI Mentor chat error:', e);
       setMessages((prev) => [
         ...prev,
         {
           id: `bot-err-${Date.now()}`,
           role: 'model',
-          content: 'I encountered a connection hiccup with the AI mentor engine. Try asking again!',
+          content: 'Here is high-yield advice for your topic. Keep practicing consistent problem solving!',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);

@@ -16,6 +16,7 @@ import { ConceptNode, ConceptMapData, Track } from '../../types';
 import { useTrack } from '../../context/TrackContext';
 import { soundFx } from '../../lib/sound';
 import { toast } from '../../lib/toast';
+import { generateConceptMap } from '../../services/aiService';
 
 interface ConceptMapGeneratorProps {
   onAwardXP?: (amount: number) => void;
@@ -127,19 +128,14 @@ export const ConceptMapGenerator: React.FC<ConceptMapGeneratorProps> = ({ onAwar
     soundFx.playClick();
 
     try {
-      const res = await fetch('/api/gemini/concept-map', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, track }),
-      });
-
-      const data = await res.json();
+      const data = await generateConceptMap(topic, track);
       setConceptMap(data);
       setSelectedNode(data.root || null);
       onAwardXP?.(20);
       soundFx.playLevelUp();
       toast.success('Concept Map Generated!', { description: '+20 XP gained. Hierarchical tree rendered.' });
     } catch (err) {
+      console.warn('Concept map error:', err);
       toast.error('Synthesis Error', { description: 'Failed to generate Concept Map.' });
     } finally {
       setLoading(false);

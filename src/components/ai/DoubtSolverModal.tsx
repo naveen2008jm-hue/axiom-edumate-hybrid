@@ -19,6 +19,7 @@ import { Track, DoubtSolution } from '../../types';
 import { useTrack } from '../../context/TrackContext';
 import { soundFx } from '../../lib/sound';
 import { toast } from '../../lib/toast';
+import { solveAcademicDoubt } from '../../services/aiService';
 
 interface DoubtSolverProps {
   isOpen?: boolean;
@@ -117,59 +118,16 @@ export const DoubtSolverModal: React.FC<DoubtSolverProps> = ({
     soundFx.playClick();
 
     try {
-      const res = await fetch('/api/gemini/doubt-solver', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          question: question.trim(),
-          imageBase64,
-          track,
-          subject,
-        }),
-      });
-
-      let data: any = {};
-      if (res.ok) {
-        data = await res.json();
-      }
-
-      // Build structured solution
-      const newSolution: DoubtSolution = {
-        id: `doubt-${Date.now()}`,
-        question: question || 'Uploaded question diagram / problem snippet',
+      const newSolution = await solveAcademicDoubt({
+        question: question.trim(),
+        imageBase64: imageBase64 || undefined,
         track,
         subject,
-        imageUrl: imagePreview || undefined,
-        conceptIdentified: data.conceptIdentified || `${subject} — Foundational Concept Breakdown`,
-        keyRulesOrFormulas: data.keyRulesOrFormulas || [
-          `Governing Principles in ${config.name} syllabus`,
-          'Boundary constraints and invariant validation',
-          'Standard procedural deduction',
-        ],
-        steps: data.steps || [
-          {
-            stepNumber: 1,
-            title: 'Problem Framing & Parameter Extraction',
-            explanation: `Deconstructed the core requirements of: "${question || 'the submitted problem'}". Isolated active variables, statutory/domain rules, and assumptions.`,
-          },
-          {
-            stepNumber: 2,
-            title: 'Application of Theoretical & Analytical Models',
-            explanation: `Applied systematic ${config.name} framework to resolve sub-equations. Checked against edge-case anomalies and boundary tolerances.`,
-          },
-          {
-            stepNumber: 3,
-            title: 'Step-by-Step Derivation',
-            explanation: 'Constructed the minimal deterministic resolution path with step-by-step clarity.',
-          },
-        ],
-        commonTraps: data.commonTraps || [
-          'Overlooking boundary constraints or initial state assumptions',
-          'Applying generalized heuristics without verifying track-specific exceptions',
-        ],
-        finalAnswer: data.finalAnswer || `The verified solution confirms that by isolating key invariants in ${subject}, the problem is solved with deterministic accuracy.`,
-        createdAt: new Date().toISOString(),
-      };
+      });
+
+      if (imagePreview) {
+        newSolution.imageUrl = imagePreview;
+      }
 
       setSolution(newSolution);
       onAwardXP?.(20);
