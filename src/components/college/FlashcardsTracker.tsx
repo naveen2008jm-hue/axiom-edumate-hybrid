@@ -31,6 +31,7 @@ import { useTrack } from '../../context/TrackContext';
 import { soundFx } from '../../lib/sound';
 import { toast } from '../../lib/toast';
 import confetti from 'canvas-confetti';
+import { generateFlashcardDeck } from '../../lib/flashcardAiService';
 
 interface FlashcardsTrackerProps {
   decks: FlashcardDeck[];
@@ -350,54 +351,25 @@ export const FlashcardsTracker: React.FC<FlashcardsTrackerProps> = ({
     soundFx.playClick();
 
     try {
-      const res = await fetch('/api/gemini/generate-flashcards', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          topic: aiTopic.trim(),
-          description: aiDescription.trim(),
-          track,
-          cardCount: aiCardCount,
-        }),
+      const generated = await generateFlashcardDeck({
+        topic: aiTopic.trim(),
+        description: aiDescription.trim(),
+        track,
+        cardCount: aiCardCount,
+        deckColor: aiDeckColor,
       });
 
-      if (!res.ok) {
-        throw new Error(`Server returned status ${res.status}`);
-      }
-
-      const data = await res.json();
-      const rawCards = Array.isArray(data.cards) ? data.cards : [];
-
-      // Defensive validation
-      const validCards: Flashcard[] = rawCards
-        .filter((c: any) => c && typeof c.front === 'string' && c.front.trim() && typeof c.back === 'string' && c.back.trim())
-        .map((c: any, idx: number) => {
-          const diff = String(c.difficulty || 'MEDIUM').toUpperCase();
-          const normalizedDiff: Flashcard['difficulty'] =
-            diff === 'EASY' || diff === 'HARD' ? diff : 'MEDIUM';
-
-          return {
-            id: `card-${Date.now()}-${idx}`,
-            front: c.front.trim(),
-            back: c.back.trim(),
-            subtopic: c.subtopic?.trim() || aiTopic.trim(),
-            difficulty: normalizedDiff,
-            mastery: 'NEW' as const,
-            reviewCount: 0,
-          };
-        });
-
-      if (validCards.length === 0) {
-        throw new Error('No valid flashcards could be parsed from the AI response.');
+      if (!generated.cards || generated.cards.length === 0) {
+        throw new Error('No flashcards could be generated. Please try again.');
       }
 
       const newDeckId = `deck-${Date.now()}`;
       const newDeck: FlashcardDeck = {
         id: newDeckId,
-        title: data.deckTitle || `${aiTopic.trim()} Active Recall`,
-        subject: data.subject || aiTopic.trim(),
-        color: aiDeckColor,
-        cards: validCards,
+        title: generated.deckTitle,
+        subject: generated.subject,
+        color: generated.color,
+        cards: generated.cards,
       };
 
       onAddDeck({
@@ -410,7 +382,7 @@ export const FlashcardsTracker: React.FC<FlashcardsTrackerProps> = ({
       onAwardXP?.(25);
       soundFx.playLevelUp();
       confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
-      toast.success(`Generated ${validCards.length} Flashcards with AI! (+25 XP)`, {
+      toast.success(`Generated ${newDeck.cards.length} Flashcards with AI! (+25 XP)`, {
         description: `Deck "${newDeck.title}" is ready for 3D active recall & voice practice.`,
       });
 

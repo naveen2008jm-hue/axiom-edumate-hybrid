@@ -1091,79 +1091,7 @@ Study Capacity: ${hoursPerDay} hours/day.`;
     }
   });
 
-  // 3b. AI Flashcard Synthesizer (Active Recall Generator)
-  app.post('/api/gemini/generate-flashcards', async (req, res) => {
-    try {
-      const { topic, subject = 'Computer Science', count = 5 } = req.body;
-      if (!topic) {
-        return res.status(400).json({ error: 'Topic is required' });
-      }
 
-      const ai = getAI();
-      if (!ai) {
-        return res.json({
-          cards: [
-            {
-              front: `What is the core intuition behind ${topic}?`,
-              back: `Fundamental principles, invariants, and time/space complexity trade-offs governing ${topic}.`,
-              subtopic: topic,
-              difficulty: 'MEDIUM',
-            },
-            {
-              front: `What are the critical edge cases when implementing ${topic}?`,
-              back: `Boundary condition overflow, null pointers/references, empty sets, and off-by-one indices.`,
-              subtopic: topic,
-              difficulty: 'HARD',
-            },
-            {
-              front: `How does ${topic} compare to its closest alternative?`,
-              back: `Analyzed through access patterns, memory footprint, cache locality, and algorithmic efficiency.`,
-              subtopic: topic,
-              difficulty: 'MEDIUM',
-            },
-          ],
-        });
-      }
-
-      const prompt = `Generate ${count} concise, high-yield technical interview & exam flashcards for the topic: "${topic}" (Subject: ${subject}).
-Each card must have a clear "front" question/prompt and a rich, bullet-pointed "back" answer explaining the invariant, time/space complexity, or solution.`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-          systemInstruction: 'You are an elite CS professor and technical interviewer. Output purely valid JSON without markdown.',
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              cards: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    front: { type: Type.STRING },
-                    back: { type: Type.STRING },
-                    subtopic: { type: Type.STRING },
-                    difficulty: { type: Type.STRING },
-                  },
-                  required: ['front', 'back', 'subtopic', 'difficulty'],
-                },
-              },
-            },
-            required: ['cards'],
-          },
-        },
-      });
-
-      const raw = response.text?.trim() || '{"cards":[]}';
-      const parsed = JSON.parse(raw);
-      return res.json(parsed);
-    } catch (err: any) {
-      console.error('Error in /api/gemini/generate-flashcards:', err);
-      return res.status(500).json({ error: err.message || 'Failed to synthesize flashcards' });
-    }
-  });
 
   // 4. LeetCode Public Statistics Proxy
   app.get('/api/leetcode/:username', async (req, res) => {
