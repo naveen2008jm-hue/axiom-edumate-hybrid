@@ -52,6 +52,8 @@ async function callDirectGemini(prompt: string, systemInstruction?: string, json
   }
 
   return text;
+}
+
 async function safeApiFetch(endpoint: string, payload: any): Promise<Response | null> {
   try {
     const isBrowser = typeof window !== 'undefined';
